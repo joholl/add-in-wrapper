@@ -22,9 +22,10 @@ Forked from an original work ok Kristaba.
 ### Linux and other UNIX with 'make' ###
 * Download the master branch (zip archive or using git)
 * Execute following command into a terminal :
-  $ make all
-  $ sudo make install
 
+  $ make all
+
+  $ sudo make install
 ### Windows ###
 For now, there is no facilities for Windows installation.
 Using mingw should work nice.
@@ -40,4 +41,5 @@ c_g1awrapper is a free software under the GNU GPL version 3 license, see the fil
 ## Authors ##
 
 Léo Grange (Kristaba), contact : grangeleo@gmail.com
+
 Modified by LePhenixNoir (lephenixnoir@outlook.com)
