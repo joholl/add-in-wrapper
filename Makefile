@@ -1,31 +1,24 @@
-CC=gcc
-CFLAGS=-W -Wall
-LDFLAGS=
+.PHONY: clean mrproper
 
-all: c_g1awrapper
+CC     = gcc
+CFLAGS = -Iinclude -Wall -Werror
 
+all: bin/bmp_utils.o bin/c_g1awrapper.o
+	$(CC) -o bin/c_g1awrapper $^
 
-c_g1awrapper: bmp_utils.o c_g1awrapper.o
-	$(CC) -o $@ $^ $(LDFLAGS)
+bin/c_g1awrapper.o : include/bmp_utils.h include/g1a_header.h
+	$(CC) -c src/c_g1awrapper.c -o bin/c_g1awrapper.o $(CFLAGS)
 
-%.o: %.c
-	$(CC) -o $@ -c $< $(CFLAGS)
-
-c_g1awrapper.o: bmp_utils.h g1a_header.h
-
-bmp_utils.o: bmp_utils.h
-
-
-.PHONY: clean mrproper realclean
+bin/bmp_utils.o : include/bmp_utils.h
+	$(CC) -c src/bmp_utils.c -o bin/bmp_utils.o $(CFLAGS)
 
 clean:
-	rm bmp_utils.o c_g1awrapper.o
+	rm bin/*.o
 
 mrproper: clean
-	rm c_g1awrapper
+	rm bin/c_g1awrapper
 
 realclean: mrproper
 
-
 install: all
-	cp c_g1awrapper /usr/bin
+	cp bin/c_g1awrapper /usr/bin

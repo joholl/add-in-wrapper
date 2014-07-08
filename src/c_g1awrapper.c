@@ -47,7 +47,8 @@ int main(int argc, char **argv) {
 
 	int tmp;
 	int previewIcon = 0;
-	int g1aNameProvided, imgNameProvided, nameProvided, versionProvided, dateProvided, internalNameProvided;
+	// int g1aNameProvided, imgNameProvided;
+    int nameProvided, versionProvided, dateProvided, internalNameProvided;
 	int error;
 	int i;
 	int binSize;
@@ -72,8 +73,8 @@ int main(int argc, char **argv) {
 	
 	error = 0;
 	i = 2;
-	g1aNameProvided = 0;
-	imgNameProvided = 0;
+	//g1aNameProvided = 0;
+	//imgNameProvided = 0;
 	versionProvided = 0;
 	nameProvided = 0;
 	dateProvided = 0;
@@ -81,12 +82,12 @@ int main(int argc, char **argv) {
 	while(!error && i<argc) {
 		if(!strcmp(argv[i], "-o") || !strcmp(argv[i], "--output")) {
 			if(i+1 < argc) g1aFileName = argv[i+1];
-			g1aNameProvided = 1;
+			//g1aNameProvided = 1;
 			i+=2;
 		}
 		else if(!strcmp(argv[i], "-i") || !strcmp(argv[i], "--icon")) {
 			if(i+1 < argc) imgFileName = argv[i+1];
-			imgNameProvided = 1;
+			//imgNameProvided = 1;
 			i+=2;
 		}
 		else if(!strcmp(argv[i], "-p") || !strcmp(argv[i], "--preview-icon")) {
