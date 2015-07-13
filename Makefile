@@ -2,7 +2,7 @@
 #  Makefile of g1a-wrapper tool.
 #
 
-.PHONY: all
+.PHONY: all install clear mrproper build
 
 CC      = gcc
 CCFLAGS = -Iinclude -W -Wall
@@ -12,7 +12,10 @@ CHDR    = $(shell find include/ -name '*.h')
 
 OUTPUT  = build/g1a-wrapper
 
-all: $(CHDR) $(OUTPUT)
+all: build $(CHDR) $(OUTPUT)
+
+buid:
+	mkdir -p build
 
 install: all
 	mkdir -p ~/bin
