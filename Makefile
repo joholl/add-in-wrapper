@@ -14,7 +14,7 @@ OUTPUT  = build/g1a-wrapper
 
 all: build $(CHDR) $(OUTPUT)
 
-buid:
+build:
 	mkdir -p build
 
 install: all
