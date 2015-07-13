@@ -1,0 +1,782 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+		]
+	},
+	"buffers":
+	[
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 96.0,
+		"last_filter": "menu",
+		"selected_items":
+		[
+			[
+				"menu",
+				"View: Toggle Menu"
+			],
+			[
+				"status",
+				"View: Toggle Status Bar"
+			],
+			[
+				"user",
+				"Preferences: Settings - User"
+			],
+			[
+				"p",
+				"Set Syntax: Plain Text"
+			],
+			[
+				"c",
+				"Set Syntax: C++"
+			],
+			[
+				"r",
+				"Set Syntax: Regular Expression"
+			],
+			[
+				"plain",
+				"Set Syntax: Plain Text"
+			],
+			[
+				"lines",
+				"Permute Lines: Shuffle"
+			],
+			[
+				"save all",
+				"File: Save All"
+			],
+			[
+				"reindent",
+				"Indentation: Reindent Lines"
+			],
+			[
+				"m",
+				"View: Toggle Menu"
+			],
+			[
+				"bar",
+				"View: Toggle Status Bar"
+			],
+			[
+				"side",
+				"View: Toggle Open Files in Side Bar"
+			],
+			[
+				"side bar",
+				"View: Toggle Open Files in Side Bar"
+			],
+			[
+				"full",
+				"Code Folding: Unfold All"
+			],
+			[
+				"iser",
+				"Preferences: Settings - User"
+			],
+			[
+				"Snippet: ",
+				"Snippet: main()"
+			],
+			[
+				"USER",
+				"Preferences: Settings - User"
+			],
+			[
+				"sort",
+				"Sort Lines"
+			],
+			[
+				"default",
+				"Preferences: Settings - Default"
+			],
+			[
+				"upper",
+				"Convert Case: Upper Case"
+			],
+			[
+				"lower",
+				"Convert Case: Lower Case"
+			],
+			[
+				"set syntax :r",
+				"Set Syntax: R"
+			],
+			[
+				"MENU",
+				"View: Toggle Menu"
+			],
+			[
+				"toggle menu",
+				"View: Toggle Menu"
+			],
+			[
+				"view: toggle tabs",
+				"View: Toggle Tabs"
+			],
+			[
+				"view:",
+				"View: Toggle Tabs"
+			],
+			[
+				"tabs",
+				"View: Toggle Tabs"
+			],
+			[
+				"",
+				"About"
+			],
+			[
+				"men",
+				"View: Toggle Menu"
+			],
+			[
+				"meun",
+				"View: Toggle Menu"
+			],
+			[
+				"build",
+				"Build: Build"
+			],
+			[
+				"statuw",
+				"Set Syntax: MultiMarkdown"
+			],
+			[
+				"minimap",
+				"View: Toggle Minimap"
+			],
+			[
+				"convert to tabs",
+				"Indentation: Convert to Tabs"
+			],
+			[
+				"folder",
+				"Project: Add Folder"
+			],
+			[
+				"c++",
+				"Set Syntax: C++"
+			],
+			[
+				"convert to spaces",
+				"Indentation: Convert to Spaces"
+			],
+			[
+				"spaces",
+				"Indentation: Convert to Spaces"
+			],
+			[
+				"indent tabs",
+				"Indentation: Convert to Tabs"
+			],
+			[
+				"indent",
+				"Indentation: Convert to Spaces"
+			],
+			[
+				"indentation tabs",
+				"Indentation: Convert to Tabs"
+			],
+			[
+				"to tabs",
+				"View: Toggle Tabs"
+			],
+			[
+				"set syntax: r",
+				"Set Syntax: R"
+			],
+			[
+				"snippet class",
+				"Snippet: class-..-(class)"
+			],
+			[
+				"preferences",
+				"Preferences: Settings - Default"
+			],
+			[
+				"settings",
+				"Preferences: Settings - Default"
+			],
+			[
+				"sidebar",
+				"View: Toggle Open Files in Side Bar"
+			],
+			[
+				"preferences user",
+				"Preferences: Settings - User"
+			],
+			[
+				"regex",
+				"Set Syntax: Regular Expression"
+			],
+			[
+				"tans",
+				"Set Syntax: ActionScript"
+			],
+			[
+				"num",
+				"Snippet: Enumeration"
+			],
+			[
+				"settings default",
+				"Preferences: Settings - Default"
+			],
+			[
+				"json",
+				"Set Syntax: JSON"
+			],
+			[
+				"auto",
+				"Set Syntax: MultiMarkdown"
+			],
+			[
+				"chec",
+				"HTML: Encode Special Characters"
+			],
+			[
+				"python",
+				"Set Syntax: Python"
+			],
+			[
+				"bl",
+				"Toggle Block Comment"
+			],
+			[
+				"settings user",
+				"Preferences: Settings - User"
+			],
+			[
+				"settings d",
+				"Preferences: Settings - Default"
+			],
+			[
+				"settins",
+				"Preferences: Settings - Default"
+			],
+			[
+				"comment ",
+				"Toggle Block Comment"
+			],
+			[
+				"comment",
+				"Toggle Comment"
+			],
+			[
+				"rot13",
+				"Rot13 Selection"
+			],
+			[
+				"case",
+				"Convert Case: Upper Case"
+			],
+			[
+				"toggle",
+				"Toggle Block Comment"
+			],
+			[
+				"mapmini",
+				"Snippet: template <typename ${1:_InputIter}>"
+			],
+			[
+				"lorem",
+				"Snippet: Lorem ipsum"
+			],
+			[
+				"sattus",
+				"View: Toggle Status Bar"
+			],
+			[
+				"mnu",
+				"View: Toggle Menu"
+			],
+			[
+				"open",
+				"View: Toggle Open Files in Side Bar"
+			],
+			[
+				"snippet",
+				"Snippet: Lorem ipsum"
+			],
+			[
+				"save as",
+				"Project: Save As"
+			],
+			[
+				"open files",
+				"View: Toggle Open Files in Side Bar"
+			],
+			[
+				"word wrap",
+				"Word Wrap: Toggle"
+			],
+			[
+				"console",
+				"Set Syntax: R Console"
+			],
+			[
+				"Toggle sa",
+				"View: Toggle Status Bar"
+			],
+			[
+				"Toggle menu",
+				"View: Toggle Menu"
+			],
+			[
+				"Toggle",
+				"View: Toggle Menu"
+			]
+		],
+		"width": 392.0
+	},
+	"console":
+	{
+		"height": 114.0,
+		"history":
+		[
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/home/sebastien/Documents/VirtualBox/webcalc/memory.h",
+		"/home/sebastien/Documents/VirtualBox/webcalc/memory.c",
+		"/home/sebastien/Documents/VirtualBox/webcalc/Disp.c",
+		"/home/sebastien/Documents/VirtualBox/webcalc/include/fxlib.h",
+		"/home/sebastien/Documents/Dictionnaire",
+		"/home/sebastien/Images/Temporary/MidnightFB.c",
+		"/tmp/wow_casio.txt",
+		"/home/sebastien/sample_code.rpg",
+		"/home/sebastien/memo",
+		"/home/sebastien/Documents/loveless",
+		"/home/sebastien/code.c",
+		"/home/sebastien/jdm",
+		"/home/sebastien/german",
+		"/home/sebastien/_org",
+		"/home/sebastien/Téléchargements/archive/install/include/errno.h",
+		"/home/sebastien/.cache/.fr-x6qpn2/readme.txt",
+		"/home/sebastien/.cache/.fr-xYXTEO/LifeGame/Disp.c",
+		"/home/sebastien/Documents/VirtualBox/webcalc/tools.c",
+		"/home/sebastien/Documents/VirtualBox/webcalc/libfont-3.1.c",
+		"/home/sebastien/Documents/VirtualBox/webcalc/HTML.c",
+		"/home/sebastien/Documents/VirtualBox/webcalc/disp_asm.s",
+		"/home/sebastien/.config/sublime-text-3/Packages/User/Preferences.sublime-settings",
+		"/home/sebastien/itoa.c",
+		"/home/sebastien/unnamed.changelog.txt",
+		"/home/sebastien/java0.log",
+		"/home/sebastien/Documents/VirtualBox/webcalc/SDCard/page.htm",
+		"/home/sebastien/Documents/VirtualBox/webcalc/SDCard/default.css",
+		"/home/sebastien/Documents/VirtualBox/webcalc/DOM.h",
+		"/home/sebastien/Documents/VirtualBox/webcalc/CSS.c",
+		"/home/sebastien/Documents/VirtualBox/webcalc/libfont-3.0.h",
+		"/home/sebastien/Documents/VirtualBox/webcalc/libfont-3.0.c",
+		"/home/sebastien/Documents/VirtualBox/webcalc/libfont-3.1.h",
+		"/home/sebastien/Documents/VirtualBox/webcalc/WebCalc.h",
+		"/home/sebastien/.cache/.fr-p67Vvz/proto2.0/bga.csv",
+		"/home/sebastien/Documents/VirtualBox/webcalc/stdinc/display.h",
+		"/home/sebastien/Documents/VirtualBox/webcalc/DOM.c",
+		"/home/sebastien/Documents/VirtualBox/webcalc/bin/addin.ld",
+		"/home/sebastien/Documents/VirtualBox/webcalc/WebCalc.s",
+		"/home/sebastien/Documents/VirtualBox/webcalc/crt0.s",
+		"/home/sebastien/Documents/VirtualBox/webcalc/tests.s",
+		"/home/sebastien/Documents/VirtualBox/webcalc/libfont-3.0.",
+		"/home/sebastien/Documents/Cpp/QtTests/style.qss",
+		"/home/sebastien/Documents/VirtualBox/webcalc/crt0s;",
+		"/home/sebastien/Documents/C/libc/src/stdlib/atoi.c",
+		"/home/sebastien/Documents/VirtualBox/webcalc/bin/crt0.s",
+		"/home/sebastien/Documents/VirtualBox/webcalc/TeX.h",
+		"/home/sebastien/Documents/VirtualBox/webcalc/TeX.c",
+		"/tmp/f2.s",
+		"/tmp/f.c",
+		"/home/~",
+		"/tmp/f.s",
+		"/home/sebastien/Documents/VirtualBox/webcalc.log",
+		"/home/sebastien/Documents/VirtualBox/webcalc/WebCalc.c",
+		"/home/sebastien/Documents/VirtualBox/webcalc/include/timer.h",
+		"/home/sebastien/Documents/VirtualBox/webcalc/include/keybios.h",
+		"/home/sebastien/Documents/VirtualBox/webcalc/include/dispbios.h",
+		"/home/sebastien/Documents/VirtualBox/webcalc/include/endian.h",
+		"/home/sebastien/Documents/VirtualBox/webcalc/include/filebios.h",
+		"/home/sebastien/Documents/VirtualBox/webcalc/disp_asm.src",
+		"/home/sebastien/Documents/VirtualBox/webcalc/disp.s",
+		"/home/sebastien/.bash_aliases",
+		"/home/sebastien/Documents/VirtualBox/webcalc/SDCard/contin.htm",
+		"/home/sebastien/Documents/VirtualBox/webcalc/SDCard/deriv.htm",
+		"/home/sebastien/Documents/VirtualBox/webcalc/SDCard/exp.htm",
+		"/home/sebastien/Documents/VirtualBox/webcalc/SDCard/page.css",
+		"/home/sebastien/Documents/VirtualBox/webcalc/display.src",
+		"/home/sebastien/Documents/VirtualBox/webcalc/libText.c",
+		"/home/sebastien/Documents/VirtualBox/webcalc/libText.h",
+		"/home/sebastien/bin/task",
+		"/tmp/SUITE.txt",
+		"/home/sebastien/Documents/Cpp/fxSDK/Default/NATIVE/include/keybios.h",
+		"/home/sebastien/Documents/VirtualBox/webcalc/SDCard/m-log.htm",
+		"/home/sebastien/Documents/VirtualBox/webcalc/SDCard/m-expon.htm",
+		"/home/sebastien/Documents/VirtualBox/webcalc/SDCard/m-contin.htm",
+		"/home/sebastien/Documents/VirtualBox/webcalc/SDCard/m-deriv.htm",
+		"/home/sebastien/Documents/VirtualBox/webcalc/SDCard/m-limit3.htm",
+		"/home/sebastien/Documents/VirtualBox/webcalc/SDCard/m-limite.htm",
+		"/home/sebastien/Documents/VirtualBox/webcalc/SDCard/m-recur.htm",
+		"/home/sebastien/Documents/VirtualBox/webcalc/SDCard/m-suites.htm",
+		"/home/sebastien/Documents/VirtualBox/webcalc/SDCard/m-limit2.htm",
+		"/home/sebastien/Documents/VirtualBox/webcalc/math.c",
+		"/home/sebastien/Documents/VirtualBox/memory.c",
+		"/home/sebastien/Documents/VirtualBox/webcalc/libText.h.old",
+		"/home/sebastien/Documents/VirtualBox/webcalc/libText.c.old",
+		"/home/sebastien/webcalc",
+		"/tmp/itoa.c",
+		"/home/sebastien/Documents/C/libc/src/stdio/__base_printf.c",
+		"/home/sebastien/Documents/C/fxSDK/functions.c",
+		"/home/sebastien/uchronie",
+		"/home/sebastien/Téléchargements/site web/index.php",
+		"/home/sebastien/.cache/.fr-HuNAdE/Jetpack Joyride Casio - Latest/Menu.c",
+		"/home/sebastien/.cache/.fr-ZTIIMt/Jetpack Joyride Casio - Latest/Jetpack.c",
+		"/home/sebastien/.cache/.fr-p09bMm/Jetpack Joyride Casio - Latest/fonctions.c",
+		"/home/sebastien/Documents/Cpp/QtTests/main.cpp",
+		"/home/sebastien/Téléchargements/CasioCraft.g1m",
+		"/home/sebastien/.ltcrabbit",
+		"/home/sebastien/.config/sublime-text-3/Packages/Default/Preferences.sublime-settings",
+		"/home/sebastien/Documents/C/X/main.c",
+		"/home/sebastien/Images/FairyTail.jpg",
+		"/tmp/a.c",
+		"/tmp/text.c",
+		"/home/sebastien/Documents/C/runtime/libtext.c",
+		"/home/sebastien/Documents/C/runtime/libtext.h",
+		"/home/sebastien/Téléchargements/hyperic-sigar-1.6.4/NOTICE",
+		"/home/sebastien/Documents/C/WebCalc/Makefile",
+		"/home/sebastien/Documents/C/runtime/runtime.h",
+		"/home/sebastien/Téléchargements/sigar.git/examples/cpuinfo.c",
+		"/home/sebastien/Téléchargements/sigar.git/src/sigar.c",
+		"/home/sebastien/Documents/C/runtime/include/sigar_log.h",
+		"/home/sebastien/Documents/C/runtime/include/sigar_ptql.h",
+		"/home/sebastien/Téléchargements/hyperic-sigar-1.6.4/AUTHORS",
+		"/home/sebastien/Téléchargements/hyperic-sigar-1.6.4/ChangeLog",
+		"/home/sebastien/Téléchargements/hyperic-sigar-1.6.4/LICENSE",
+		"/home/sebastien/Téléchargements/hyperic-sigar-1.6.4/README",
+		"/home/sebastien/Téléchargements/sigar.git/AUTHORS",
+		"/home/sebastien/Téléchargements/sigar.git/examples/sigar_ps.c",
+		"/home/sebastien/Documents/C/runtime/runtime.c",
+		"/home/sebastien/.cache/splash-theme-preview-Default Theme.png",
+		"/home/sebastien/Documents/VirtualBox/Programs/LibText/LibText_2.1.zip",
+		"/tmp/color-drawing.c",
+		"/home/sebastien/Documents/C/runtime/main.c",
+		"/home/sebastien/.phoenix/Environment/main.c",
+		"/home/sebastien/.profile",
+		"/home/sebastien/bin/gccsdl",
+		"/home/sebastien/.phoenix/Environment/Makefile",
+		"/home/sebastien/Documents/C/3dTests/cubes.c",
+		"/tmp/SDL_cpuinfo.h",
+		"/home/sebastien/Documents/Web/unknown-project/index.html"
+	],
+	"find":
+	{
+		"height": 22.0
+	},
+	"find_in_files":
+	{
+		"height": 93.0,
+		"where_history":
+		[
+			"/home/sebastien/Documents/VirtualBox/webcalc",
+			""
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": true,
+		"find_history":
+		[
+			"CSS_indexOf",
+			"handle",
+			"cwd",
+			"offset",
+			"\n		  ",
+			"\n	  ",
+			"\n  ",
+			"  ",
+			"n",
+			"itoa",
+			"atoi",
+			"atoir",
+			"fonts[id]",
+			"webcal",
+			"binary_resource",
+			"tools_font",
+			"struct Font *f",
+			"font_text",
+			"5",
+			"f->",
+			"f",
+			"}\n",
+			"glyphNumber",
+			"f->glyphNumber",
+			";\n",
+			"fonts[id]",
+			"font",
+			"font_load",
+			"_binary_webcalc6_fxf_start",
+			"initialize",
+			"runtime_debug",
+			"_check",
+			"disp_pixel",
+			"	  ",
+			"   ",
+			"\n        ",
+			"		#",
+			"	#",
+			"disp_pixel",
+			"uint",
+			"printf",
+			"printdf",
+			"Disp_Pixel",
+			"{",
+			"disp_vram",
+			"Disp_VRAM",
+			"Stack_rem",
+			"p_off",
+			"Stack_",
+			"fonts[0]",
+			"allocTracer_add",
+			"allocTracer",
+			"AllocTracer_Style",
+			"AllocTracer_DOM",
+			"AllocTracer_Misc",
+			"AllocTracer",
+			"AllocTracerCtgy",
+			"category",
+			"Debug",
+			"allocTracerInit",
+			"\n  ",
+			"   ",
+			"  ",
+			"malloc|calloc",
+			"malloc|calloc*",
+			"AllocTracer_Misc",
+			"malloc|calloc",
+			"p_value",
+			"name",
+			"calloc|malloc",
+			"[calloc|malloc]",
+			"alloc",
+			"PixelLimit",
+			"pixelLimit",
+			", style->width %d,",
+			"**/",
+			"  /**",
+			";   /**",
+			" 	:",
+			"  	:",
+			" 		:",
+			" 		",
+			"     		",
+			"    	:",
+			":",
+			"Txt_Height",
+			"Txt_Width",
+			"Txt_Text",
+			"t",
+			"  ",
+			"    ",
+			"R",
+			"==",
+			"backgroundImage",
+			"~~ \\\\fls0\\HTML\\DEFAULT.css",
+			"files[x]",
+			"FILE_HTML",
+			"\n			  ",
+			"\n		  ",
+			"\n	  ",
+			"\n  ",
+			"  ",
+			"88024d48",
+			"*text",
+			"debug",
+			"&",
+			"|",
+			"x	",
+			"-	",
+			"x   ",
+			"   \n",
+			"letter-spacing",
+			" (",
+			"style.",
+			"style",
+			"el->style->wordSpacing",
+			"style->",
+			" \n",
+			"word",
+			"is",
+			"are",
+			"These",
+			"2",
+			"el->",
+			"border",
+			"margin",
+			"Top",
+			"total"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+			"dpixel",
+			"disp_pixel",
+			"1",
+			"2",
+			"member",
+			"LogoBeta",
+			"stack->",
+			"16",
+			"getTagName",
+			"Pixels",
+			"const",
+			"	",
+			"  ",
+			"	",
+			"  ",
+			"E"
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": false,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"sheets":
+			[
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 20.0
+	},
+	"input":
+	{
+		"height": 0.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.find_results":
+	{
+		"height": 253.0
+	},
+	"pinned_build_system": "",
+	"project": "bmp_utils.sublime-project",
+	"replace":
+	{
+		"height": 40.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"stdio.h",
+				"/usr/include/stdio.h"
+			],
+			[
+				"libc",
+				"~/Documents/C/libc/LIBC"
+			],
+			[
+				"~/documents/c/libc/include/stdio.h",
+				"~/Documents/C/libc/include/stdio.h"
+			],
+			[
+				"thisisafilewithaveryverylongnamethatcomesfromthepastafilewhosecontent.withanextension",
+				"~/Documents/Cpp/fxSDK/thisisafilewithaveryverylongnamethatcomesfromthepastafilewhosecontentyoudontwantoknow.withanextension"
+			],
+			[
+				"thisisafilewithaverylongname.andaverylongextension",
+				"~/Documents/Cpp/fxSDK/thisisafilewithaverylongname.andaverylongextension"
+			],
+			[
+				"fxsdk.hpp",
+				"~/Documents/Cpp/fxSDK/fxSDK.hpp"
+			],
+			[
+				"p",
+				"~/Documents/Cpp/fxSDK/ProjectManager.hpp"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 500.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 380.0
+	},
+	"select_symbol":
+	{
+		"height": 392.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 392.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": false,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 140.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}
