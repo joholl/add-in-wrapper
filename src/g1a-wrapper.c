@@ -15,6 +15,8 @@
 #include "error.h"
 #include "bmp_utils.h"
 
+extern const char *_help_string;
+
 int main(int argc, char **argv)
 {
 	// Header structure, options structure, error indicator.
@@ -41,7 +43,7 @@ int main(int argc, char **argv)
 	// Parsing command-line arguments.
 	args(argc,argv,&options);
 
-	// If an error occured, quits the program.
+	// If an error occurred, quits the program.
 	if(failure) return 1;
 
 	// Generating the header according to the command-line parameters.
@@ -128,7 +130,10 @@ void args(int argc, char **argv, struct Options *options)
 	for(i=1;i<argc;i++)
 	{
 		// Help command.
-		if(!strcmp(argv[i],"--help")) help();
+		if(!strcmp(argv[i], "-h") || !strcmp(argv[i],"--help")) help();
+		// Format command.
+		if(!strcmp(argv[i], "-f") || !strcmp(argv[i],"--format"))
+			format();
 
 		// Output filename.
 		if(!strcmp(argv[i],"-o")) options->output = argv[++i];
@@ -294,61 +299,48 @@ int string_format(const char *str, const char *format)
 
 void help(void)
 {
-	printf("Usage: g1a-wrapper <bin_file> [options]\n\n"
-		"g1a-wrapper creates a g1a file (add-in application for CASIO\n"
-		"fx-9860G calculator series) from the given binary file and options.\n"
-		"\n"
-		"Available options :\n"
-		"  -o, --output=filename    Name of the output file.\n"
-		"                           Default is 'addin.g1a'.\n"
-		"  -i, --icon=iconfile      Program icon, must be a valid non-indexed bmp file.\n"
-		"  -n, --name=name          Name of the add-in application.\n"
-		"                           Should be 8-characters long or less.\n"
-		"                           Default is the output filename.\n"
-		"  -v  --version=version    Program version, using format 'MM.mm.ppppp'.\n"
-		"                           Default is '00.00.0000'.\n"
-		"  -N, --internal=name      Internal name of the program.\n"
-		"                           It is advised to begin with '@', using uppercase.\n"
-		"                           Default is '@ADDIN'.\n"
-		"  -d, --date=date          Date of the build, using format 'yyyy.MMdd.hhmm'.\n"
-		"                           Default is the execution date of g1a-wrapper.\n"
-		"  -h, --help               Displays this help.\n"
-		"\n"
-		"You can enable or disable warnings during program execution.\n"
-		"Warning options :\n"
-		"  -Wlength, -Wno-length    Emitted when a specified header entry is too long.\n"
-		"  -Wformat, -Wno-format    Emitted when a specified header entry does not\n"
-		"                           follow the standard format.\n"
-		"\n"
-		"Some errors can also be masked. However, forcing execution of the wrapper can\n"
-		"lead to the generation of an incorrect g1a file.\n"
-		"Error options :\n"
-		"  -Eoption, -Eno-options   Emitted when an unrecognized option is found.\n"
-		"  -Eillegal, -Eno-illegal  Emitted when an unexpected option is found.\n"
-		);
+	puts(_help_string);
 
 	exit(0);
 }
 
-void info(void)
+void format(void)
 {
-	printf("0x%03x magic\n",(unsigned int)offsetof(struct G1A_Header,magic));
-	printf("0x%03x addin_id\n",(unsigned int)offsetof(struct G1A_Header,addin_id));
-	printf("0x%03x control1\n",(unsigned int)offsetof(struct G1A_Header,control1));
-	printf("0x%03x filesize_uint\n",(unsigned int)offsetof(struct G1A_Header,filesize_uint));
-	printf("0x%03x control2\n",(unsigned int)offsetof(struct G1A_Header,control2));
-	printf("0x%03x custom_seq\n",(unsigned int)offsetof(struct G1A_Header,custom_seq));
-	printf("0x%03x internal\n",(unsigned int)offsetof(struct G1A_Header,internal));
-	printf("0x%03x estrips\n",(unsigned int)offsetof(struct G1A_Header,estrips));
-	printf("0x%03x version\n",(unsigned int)offsetof(struct G1A_Header,version));
-	printf("0x%03x date\n",(unsigned int)offsetof(struct G1A_Header,date));
-	printf("0x%03x bitmap\n",(unsigned int)offsetof(struct G1A_Header,bitmap));
-	printf("0x%03x estrip1\n",(unsigned int)offsetof(struct G1A_Header,estrip1));
-	printf("0x%03x estrip2\n",(unsigned int)offsetof(struct G1A_Header,estrip2));
-	printf("0x%03x estrip3\n",(unsigned int)offsetof(struct G1A_Header,estrip3));
-	printf("0x%03x estrip4\n",(unsigned int)offsetof(struct G1A_Header,estrip4));
-	printf("0x%03x name\n",(unsigned int)offsetof(struct G1A_Header,name));
-	printf("0x%03x filesize_ulong\n",(unsigned int)offsetof(struct G1A_Header,filesize_ulong));
+	printf("g1a header data format :\n\n");
+	printf("0x%03x magic\n",
+		(unsigned int)offsetof(struct G1A_Header, magic));
+	printf("0x%03x addin_id\n",
+		(unsigned int)offsetof(struct G1A_Header, addin_id));
+	printf("0x%03x control1\n",
+		(unsigned int)offsetof(struct G1A_Header, control1));
+	printf("0x%03x filesize_uint\n",
+		(unsigned int)offsetof(struct G1A_Header, filesize_uint));
+	printf("0x%03x control2\n",
+		(unsigned int)offsetof(struct G1A_Header, control2));
+	printf("0x%03x custom_seq\n",
+		(unsigned int)offsetof(struct G1A_Header, custom_seq));
+	printf("0x%03x internal\n",
+		(unsigned int)offsetof(struct G1A_Header, internal));
+	printf("0x%03x estrips\n",
+		(unsigned int)offsetof(struct G1A_Header, estrips));
+	printf("0x%03x version\n",
+		(unsigned int)offsetof(struct G1A_Header, version));
+	printf("0x%03x date\n",
+		(unsigned int)offsetof(struct G1A_Header, date));
+	printf("0x%03x bitmap\n",
+		(unsigned int)offsetof(struct G1A_Header, bitmap));
+	printf("0x%03x estrip1\n",
+		(unsigned int)offsetof(struct G1A_Header, estrip1));
+	printf("0x%03x estrip2\n",
+		(unsigned int)offsetof(struct G1A_Header, estrip2));
+	printf("0x%03x estrip3\n",
+		(unsigned int)offsetof(struct G1A_Header, estrip3));
+	printf("0x%03x estrip4\n",
+		(unsigned int)offsetof(struct G1A_Header, estrip4));
+	printf("0x%03x name\n",
+		(unsigned int)offsetof(struct G1A_Header, name));
+	printf("0x%03x filesize_ulong\n",
+		(unsigned int)offsetof(struct G1A_Header, filesize_ulong));
 
 	exit(0);
 }

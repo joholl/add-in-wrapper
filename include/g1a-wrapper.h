@@ -95,6 +95,6 @@ Offset	Size	Description
 	int string_cal(char *dest, const char *src, size_t maxlength);
 	int string_format(const char *str, const char *format);
 	void help(void);
-	void info(void);
+	void format(void);
 
 #endif // _G1A_WRAPPER_H

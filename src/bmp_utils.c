@@ -1,45 +1,105 @@
-/*********************************************
-**
-**  Bitmap reading module.
-**
-*********************************************/
+/*
+	Bitmap reading module.
+*/
 
+
+
+/*
+	Header inclusions.
+*/
+
+// Standard headers.
 #include <stdio.h>
 #include <stdlib.h>
 
+// Project headers.
 #include "error.h"
 #include "bmp_utils.h"
 
-void bitmap_read(const char *file, unsigned int width, unsigned int height, uint8_t *data)
+
+
+/*
+	bitmpa_read()
+
+	Reads a bitmap file and copies its data to the given pointer. The data
+	should be only black and white. If not, a warning is emitted and each
+	pixel is turned into the closer color according to an arithmetic mean.
+
+	@arg	file	File to read.
+	@arg	width	Bitmap width.
+	@arg	height	Bitmap height.
+	@arg	data	Memory area to copy data to.
+*/
+
+void bitmap_read(const char *file, unsigned int width, unsigned int height,
+	uint8_t *data)
 {
 	/*
-	**  This function read a bitmap and copies its data to the given pointer.
-	**  The data should be only black and white. If not, a warning is emitted
-	**  and each pixel is converted as the closer color according to an
-	**  arithmetic mean.
+		Variables declaration.
 	*/
 
 	// Declaring variables.
 	unsigned int l,i,j;
+	// Using a bitmap structure.
 	struct Bitmap *bmp;
+	// Using a long to store the file size to read.
 	long size;
-	FILE *f;
+	// Using a file pointer.
+	FILE *fp;
 
-	// Opening bitmap file.
-	f = fopen(file,"r");
-	if(!f) { error_emit(ERROR,"bmp-no-open",file); return ; }
+	// Opening the bitmap file.
+	fp = fopen(file,"r");
+	// Emitting an error on failure.
+	if(!fp)
+	{
+		// Emitting a bmp-no-open error.
+		error_emit(ERROR, "bmp-no-open", file);
+		// Also returning from function.
+		return;
+	}
 
-	// Allocating memory.
-	if(!(bmp = (struct Bitmap *)malloc(sizeof(struct Bitmap))))
-		{ error_emit(ERROR,"bmp-alloc",file); return; }
-	fseek(f,0,SEEK_END);
-	bmp->data = (uint8_t *)malloc(size = ftell(f)+1);
-	fseek(f,0,SEEK_SET);
-	if(!bmp->data) { fclose(f); error_emit(ERROR,"bmp-alloc",file); return; }
 
-	// Reading file.
-	fread((void *)bmp->data,size,1,f);
-	fclose(f);
+
+	/*
+		Reading file.
+	*/
+
+	// Allocating memory for the size of a bitmap.
+	bmp = (struct Bitmap *)malloc(sizeof(struct Bitmap));
+	// Emitting an error on alloc failure.
+	if(!bmp)
+	{
+		// Emitting a bmp-alloc error.
+		error_emit(ERROR,"bmp-alloc",file);
+		// Closing the file pointer.
+		fclose(fp);
+		// Returning from function.
+		return;
+	}
+
+	// Getting the file size. Seeking the file end.
+	fseek(fp, 0, SEEK_END);
+	// Allocating memory for the size of the file.
+	bmp->data = (uint8_t *)malloc(size = ftell(fp) + 1);
+	// Moving the file pointer to the beginning of the file.
+	fseek(fp, 0, SEEK_SET);
+	// Handling alloc failure.
+	if(!bmp->data)
+	{
+		// Emitting a bmp-alloc error.
+		error_emit(ERROR,"bmp-alloc",file);
+		// Freeing the previous allocated bitmap pointer.
+		free(bmp);
+		// Closing the file.
+		fclose(fp);
+		// Finally returning from function.
+		return;
+	}
+
+	// Reading file data to the allocated memory.
+	fread((void *)bmp->data, size, 1, fp);
+	// Closing the file.
+	fclose(fp);
 
 	// Checking bitmap signature.
 	l = (bmp->data[0]<<8) + bmp->data[1];
