@@ -20,6 +20,30 @@
 
 
 /*
+	Composed types definitions.
+
+	These types are used only in this file.
+*/
+
+// Bitmap meta-information structure definition.
+struct Bitmap
+{
+	unsigned int width, height;
+	unsigned int depth;
+	const uint8_t *data;
+};
+
+
+
+/*
+	Static declarations.
+*/
+
+static int bitmap_pixels(const struct Bitmap *bmp, uint8_t *address);
+
+
+
+/*
 	bitmap_read()
 
 	Reads a bitmap file and copies its data to the given pointer. The data
@@ -166,7 +190,7 @@ void bitmap_read(const char *file, unsigned int width, unsigned int height,
 	@return		1 if non-black-and-white pixels are found, 0 otherwise.
 */
 
-int bitmap_pixels(const struct Bitmap *bmp, uint8_t *address)
+static int bitmap_pixels(const struct Bitmap *bmp, uint8_t *address)
 {
 	const unsigned int offset =
 		(bmp->data[0x0d] << 24) | (bmp->data[0x0c] << 16) |
@@ -240,4 +264,73 @@ int bitmap_pixels(const struct Bitmap *bmp, uint8_t *address)
 
 	*address = 0;
 	return warning;
+}
+
+/*
+	bitmap_output()
+
+	Outputs a saved bitmap from raw data and size.
+
+	@arg	data	Raw bitmap data, in monochrome format.
+	@arg	width	Bitmap width.
+	@arg	height	Bitmap height.
+	@arg	stream	Stream to output to.
+*/
+
+void bitmap_output(uint8_t *data_ptr, int width, int height, FILE *stream)
+{
+	// Using additional data for the first and last lines.
+	uint8_t additional[] = {	
+		0x00, 0x00, 0x00, 0x04,
+		0x7f, 0xff, 0xff, 0xfc
+	};
+	// Using a volatile data pointer and a byte.
+	uint8_t *data = additional, byte;
+	// Using integer coordinates.
+	int x, y;
+	// Using an iterator offset in the byte.
+	int offset;
+	// Using a character.
+	char c;
+
+	// Iterating over the lines.
+	for(y = 0; y < height; y++)
+	{
+		// Switching to the right data pointer.
+		if(y == 1) data = data_ptr;
+		else if(y == height - 1) data = additional + 4;
+
+		// Getting next byte.
+		byte = *data++;
+		// Initializing the byte offset.
+		offset = 0;
+
+		// Iterating over the pixels.
+		for(x = 0; x < width; x++)
+		{
+
+			// Getting new byte if needed.
+			if(offset == 8)
+			{
+				// Getting a new byte.
+				byte = *data++;
+				// Resetting bit offset.
+				offset = 0;
+			}
+
+			// Getting the next bit as character.
+			c = (byte & 128 ? '#' : ' ');
+			// Shifting the current byte.
+			byte <<= 1;
+			// Updating bit offset.
+			offset++;
+
+			// Outputting c twice (better ratio).
+			fputc(c, stream);
+			fputc(c, stream);
+		}
+
+		// Adding a line break.
+		fputc('\n', stream);
+	}
 }

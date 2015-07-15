@@ -22,13 +22,19 @@
 // Options management structure.
 struct Options
 {
+	// Is the actio to dump a file ?
 	int dump;
+	// Input and output file names.
 	char *input;
 	char *output;
+	// Is the output file name dynamcally allocated ?
+	int output_dynamic;
+	// Program name, version, internal name, build date.
 	char name[9];
 	char version[11];
 	char internal[9];
 	char date[15];
+	// Raw monochrome icon data.
 	uint8_t icon[76];
 };
 

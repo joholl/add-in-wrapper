@@ -132,6 +132,10 @@ int main(int argc, char **argv)
 	// Writing the header and the binary content.
 	write(options.input, options.output, header);
 
+	// Freeing the output file name field if it was dynamically allocated.
+	if(options.output_dynamic) free(options.output);
+
+	// Successfully returning from the program.
 	return 0;
 }
 
@@ -148,6 +152,9 @@ int main(int argc, char **argv)
 
 void args(int argc, char **argv, struct Options *options)
 {
+	// Using default icon data.
+	uint8_t default_icon_1[] = { 0x00, 0x00, 0x00, 0x04 };
+	uint8_t default_icon_2[] = { 0x00, 0x00, 0x01, 0xfc };
 	// Using an iterator to parse the various arguments.
 	int i;
 
@@ -160,22 +167,31 @@ void args(int argc, char **argv, struct Options *options)
 	// No default file specified.
 	options->input = NULL;
 	options->output = NULL;
+	// The output file name wasn't dynamically allocated, for now.
+	options->output_dynamic = 0;
 	// Empty program name and build date.
 	*options->name = 0;
 	*options->date = 0;
 	// Default version and internal name, as said in the help page.
 	strcpy(options->version, "00.00.0000");
 	strcpy(options->internal, "@ADDIN");
+	// Initializing the icon. Copying 12 lines of pattern 1 (the first will
+	// be omitted when assembling the g1a file).
+	for(i = 0; i < 12; i++)
+		memcpy(options->icon + (i << 2), default_icon_1, 4);
+	// Then copying 6 lines of pattern 2 (no need to append a last line).
+	for(i = 12; i < 19; i++)
+		memcpy(options->icon + (i << 2), default_icon_2, 4);
 
 	// Parsing the loop to detect the error parameters.
-	for(i=1; i < argc; i++)
+	for(i = 1; i < argc; i++)
 	{
 		// If the argument show an error, mask it.
 		if(!error_argument(argv[i])) argv[i] = NULL;
 	}
 
 	// Parsing the different given parameters.
-	for(i=1;i<argc;i++)
+	for(i = 1; i < argc; i++)
 	{
 		// Skipping NULL arguments.
 		if(!argv[i]) continue;
@@ -324,8 +340,11 @@ void args(int argc, char **argv, struct Options *options)
 		// Computing the base name length.
 		length = tmp - options->input;
 
-		// Allocating data to output (IMPROPER: will not be freed).
+		// Allocating data to output.
 		options->output = malloc(length + 5);
+		// As a consequence, setting the flag not to forget freeing
+		// this field.
+		options->output_dynamic = 1;
 		// Copying the base name.
 		strncpy(options->output, options->input, length);
 		// Appending extension '.g1a'.
@@ -425,7 +444,7 @@ void generate(struct Options options, char *data)
 	strncpy(data + 48, options.version, 10);
 	// Writing the build date.
 	strncpy(data + 60, options.date, 14);
-	// Writing the program icons.
+	// Writing the program icon.
 	memcpy(data + 76, options.icon + 4, 68);
 	// Skipping the e-strips data.
 
@@ -679,7 +698,10 @@ void dump(const char *filename)
 	ptr = data + 0x03c;
 	// Printing the header characters and a line break.
 	while(ptr < data + 0x04a && *ptr) putchar(*ptr++);
-	puts("'");
+	puts("'\n");
+
+	puts("Icon:");
+	bitmap_output((uint8_t *)(data + 0x4c), 30, 19, stdout);
 }
 
 /*
