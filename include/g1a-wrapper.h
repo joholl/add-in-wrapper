@@ -29,6 +29,7 @@
 // Options management structure.
 struct Options
 {
+	int dump;
 	char *input;
 	char *output;
 	char name[9];
@@ -114,6 +115,8 @@ void write(const char * inputfile, const char *outputfile, char *data);
 void args(int argc, char **argv, struct Options *options);
 int string_cal(char *dest, const char *src, size_t maxlength);
 int string_format(const char *str, const char *format);
+// Dumps a g1a file's header content.
+void dump(const char *filename);
 // Displaying program help.
 void help(void);
 // Displaying header information.

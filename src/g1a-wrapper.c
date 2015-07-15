@@ -51,6 +51,8 @@ int main(int argc, char **argv)
 		"bmp-valid", "file '%s' is not a valid bmp file",
 		// Bitmap format is not supported.
 		"bmp-depth", "bitmap image '%s' has unsupported depth %d",
+		// The given file to dump is not a valid g1a file.
+		"g1a-valid", "file '%s' is not a valid g1a file (%s)",
 		// NULL terminator.
 		NULL
 	};
@@ -97,6 +99,16 @@ int main(int argc, char **argv)
 	// If an error occurred, returning from the program.
 	if(failure) return 1;
 
+	// Dumping input file if the dump option has been activated. Then,
+	// returning the program.
+	if(options.dump)
+	{
+		// Dumping the file.
+		dump(options.input);
+		// Returning the program.
+		return 0;
+	}
+
 	// Generating the header according to the command-line parameters.
 	generate(options, (char *)&header);
 
@@ -127,9 +139,8 @@ void generate(struct Options options, char *data)
 	memcpy(data+0x04C,options.icon+4,68);
 	for(i=0x090;i<0x1D0;i++) data[i] = 0;
 	for(i=0x1D0;i<0x1D4;i++) data[i] = 0;
-	for(i=0x1DC;i<0x1F0;i++) data[i] = 0;
 	strncpy(data+0x1D4,options.name,8);
-	for(i=0x1F4;i<0x200;i++) data[i] = 0;
+	for(i=0x1DC;i<0x200;i++) data[i] = 0;
 }
 
 void write(const char *inputfile, const char *outputfile, char *data)
@@ -149,10 +160,9 @@ void write(const char *inputfile, const char *outputfile, char *data)
 
 	data[0x00E] = size + 0x41;
 	data[0x014] = size + 0xB8;
-	for(i=0;i<4;i++) *(data+0x010+i) = *(((char *)&size)+3-i);
-	for(i=0;i<4;i++) *(data+0x1F0+i) = *(((char *)&size)+3-i);
+	for(i=0; i<4; i++) data[0x010+i] = data[0x1f0+i] = *(((char *)&size)+3-i);
 
-	for(i=0;i<0x015;i++) data[i] = ~data[i];
+	for(i=0;i<0x020;i++) data[i] = ~data[i];
 	fwrite(data,1,sizeof(struct G1A_Header),output);
 
 	while(fread(&byte,1,1,input)) fwrite(&byte,1,1,output);
@@ -167,6 +177,7 @@ void args(int argc, char **argv, struct Options *options)
 	int i;
 
 	// Initializing option values.
+	options->dump = 0;
 	options->input = NULL;
 	options->output = NULL;
 	*options->name = 0;
@@ -184,6 +195,13 @@ void args(int argc, char **argv, struct Options *options)
 		if(!strcmp(argv[i], "-h") || !strcmp(argv[i],"--help")) help();
 		// Info command.
 		if(!strcmp(argv[i],"--info")) info();
+
+		if(!strcmp(argv[i],"-d"))
+		{
+			options->input = argv[++i];
+			options->dump = 1;
+			continue;
+		}
 
 		// Output filename.
 		if(!strcmp(argv[i],"-o")) options->output = argv[++i];
@@ -234,7 +252,7 @@ void args(int argc, char **argv, struct Options *options)
 				error_emit(WARNING,"format","internal name",options->internal,"@[A-Z]{0,7}");
 		}
 
-		// Testing if the argument is enabling or disabling some errors.
+		// Testing if the argument is disabling some errors.
 		else if(!error_argument(argv[i]));
 
 		// Looking for an unrecognized option.
@@ -355,8 +373,140 @@ int string_format(const char *str, const char *format)
 	return (*format==0 && *str);
 }
 
+/*
+	dump()
+
+	Dumps the file header contents, assuming the file is a g1a file.
+
+	@arg	filename	File to dump header.
+*/
+
+void dump(const char *filename)
+{
+	// Using an array to store header data.
+	char data[0x200];
+	// Using a file pointer to read file contents.
+	FILE *fp;
+	// Using an integer to store the total file size and a temporary
+	// integers.
+	int filesize, t1, t2;
+	// Using an iterator.
+	int i;
+	// Using a parsing pointer.
+	char *ptr;
+
+	// Opening file.
+	fp = fopen(filename, "r");
+	// Handling failure by emitting a fatal error.
+	if(!fp) error_emit(FATAL, "input", filename);
+	// Reading file header contents.
+	fread(data, 0x200, 1, fp);
+	// Retrieving the file size.
+	fseek(fp, 0, SEEK_END);
+	filesize = ftell(fp);
+	// Closing the file.
+	fclose(fp);
+
+	// Inverting the general header !
+	for(i=0; i < 0x020; i++) data[i] = ~data[i];
+
+
+
+	/*
+		Checking file validity.
+	*/
+
+	// A g1a must have binary code with its header !
+	if(filesize <= 0x200)
+	{
+		// Emitting an error if there's not binary code.
+		error_emit(ERROR, "g1a-valid", filename, "too short");
+		// Then returning : why would we analyze an non-g1a file ?
+		return;
+	}
+
+	// Looking for initial string "USBPower".
+	if(strncmp(data, "USBPower", 8))
+	{
+		// Emitting an error if not found.
+		error_emit(ERROR, "g1a-valid", filename, "\"USBPower\"");
+		return;
+	}
+
+	// Looking for MCS add-in indicator.
+	if((unsigned char )data[8] != 0xf3)
+	{
+		// Emitting an error.
+		error_emit(ERROR, "g1a-valid", filename, "not an add-in");
+		return;
+	}
+
+	// Looking for the file size.
+	t1 = (data[16] << 24) | (data[17] << 16) | (data[18] << 8) | data[19];
+	t2 = (data[496] << 24) | (data[497] << 16) | (data[498] << 8)
+		| data[499];
+	// Checking validity.
+	if(t1 != filesize || t2 != filesize)
+	{
+		// Emitting an error.
+		error_emit(ERROR, "g1a-valid", filename, "wrong file size");
+		return;
+	}
+
+	// Getting the checksums.
+	t1 = (data[19] + 0x41) & 0xff;
+	t2 = (data[19] + 0xb8) & 0xff;
+	// Checking checksums.
+	if((uint8_t)data[14] != t1 || (uint8_t)data[20] != t2)
+	{
+		// Emitting an error message.
+		error_emit(ERROR, "g1a-valid", filename, "wrong checksums");
+		return;
+	}
+
+	// Printing the input file name.
+	printf("Input file     '%s'\n", filename);
+	// Printing the input file size.
+	printf("File size       %d bytes\n\n", filesize);
+
+	// Printing the program name.
+	printf("Program name   '");
+	ptr = data + 0x1d4;
+	// Printing the header characters and a line break.
+	while(ptr < data + 0x1dc && *ptr) putchar(*ptr++);
+	puts("'");
+
+	// Printing the program internal name.
+	printf("Internal name  '");
+	ptr = data + 0x020;
+	// Printing the header characters and a line break.
+	while(ptr < data + 0x028 && *ptr) putchar(*ptr++);
+	puts("'");
+
+	// Printing the program version.
+	printf("Version        '");
+	ptr = data + 0x030;
+	// Printing the header characters and a line break.
+	while(ptr < data + 0x03a && *ptr) putchar(*ptr++);
+	puts("'");
+
+	// Printing the program build date.
+	printf("Build data     '");
+	ptr = data + 0x03c;
+	// Printing the header characters and a line break.
+	while(ptr < data + 0x04a && *ptr) putchar(*ptr++);
+	puts("'");
+}
+
+/*
+	help()
+
+	Prints a help message and exits.
+*/
+
 void help(void)
 {
+	// Printing a help message.
 	puts(
 "Usage: g1a-wrapper <bin_file> [options]\n"
 "\n"
@@ -376,8 +526,9 @@ void help(void)
 "  -d, --date=<date>    Date of the build, using format 'yyyy.MMdd.hhmm'.\n"
 "                       Default is the current time.\n"
 "\n"
+"Other options :\n"
 "  -h, --help           Displays this help.\n"
-"  -i, --info           Displays header format information.\n"
+"  --info               Displays header format information.\n"
 "\n"
 "You can disable warnings during program execution.\n"
 "\n"
@@ -393,11 +544,19 @@ void help(void)
 "  -Eillegal    Illegal invocation syntax (unexpected option found).\n"
 	);
 
+	// Exiting the program.
 	exit(0);
 }
 
+/*
+	info()
+
+	Outputs informations about the header file format and exits.
+*/
+
 void info(void)
 {
+	// Printing header file format informations.
 	puts(
 		"Add-in header format :\n"
 		"\n"
@@ -432,5 +591,6 @@ void info(void)
 		"0x200	...	Binary content\n"
 	);
 
+	// Exiting the program.
 	exit(0);
 }

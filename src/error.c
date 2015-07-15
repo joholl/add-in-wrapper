@@ -173,8 +173,6 @@ int error_argument(const char *argument)
 	// Disable operation needs an error name !
 	if(!*++argument) return 1;
 
-	printf("argument is '%s'\n", argument);
-
 	// Iterating over the errors.
 	while(parser)
 	{

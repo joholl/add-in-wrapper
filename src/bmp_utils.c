@@ -33,7 +33,7 @@
 */
 
 void bitmap_read(const char *file, unsigned int width, unsigned int height,
-	uint8_t *data)
+	uint8_t *data_ptr)
 {
 	/*
 		Variables declaration.
@@ -41,6 +41,8 @@ void bitmap_read(const char *file, unsigned int width, unsigned int height,
 
 	// Using an integer to read parts of bitmap header.
 	uint32_t l;
+	// Using a short-named pointer to bitmap data.
+	uint8_t *data;
 	// Using a bitmap structure.
 	struct Bitmap *bmp;
 	// Using a long to store the file size to read.
@@ -81,7 +83,9 @@ void bitmap_read(const char *file, unsigned int width, unsigned int height,
 	// Getting the file size. Seeking the file end.
 	fseek(fp, 0, SEEK_END);
 	// Allocating memory for the size of the file.
-	bmp->data = (uint8_t *)malloc(size = ftell(fp) + 1);
+	data = (uint8_t *)malloc(size = ftell(fp) + 1);
+	// Setting structure data pointer.
+	bmp->data = data;
 	// Moving the file pointer to the beginning of the file.
 	fseek(fp, 0, SEEK_SET);
 	// Handling alloc failure.
@@ -102,48 +106,80 @@ void bitmap_read(const char *file, unsigned int width, unsigned int height,
 	// Closing the file.
 	fclose(fp);
 
-	// Checking bitmap signature.
-	l = (bmp->data[0]<<8) + bmp->data[1];
-	if(l!=0x424D && l!=0x4241 && l!=4349 && l!=4350 && l!=4943 && l!=5054) {
-		error_emit(ERROR,"bmp->data-valid",file); return; }
+	// Getting bitmap signature.
+	l = (data[0] << 8) | data[1];
+	// Checking if the signature is one of BM, BA, CI, CP, IC or PT.
+	if(l != 0x424d && l != 0x4241 && l != 4349 && l != 4350 && l != 4943
+		&& l!=5054)
+	{
+		// If not, emitting an error.
+		error_emit(ERROR, "bmp-valid", file);
+		// Also returning.
+		return;
+	}
 
-	// Checking width.
-	l = (bmp->data[21]<<24)+(bmp->data[20]<<16)+(bmp->data[19]<<8)+bmp->data[18];
-	if(l!=width) error_emit(WARNING,"bmp->data-width",file,l,width);
+	// Getting image width.
+	l = (data[21] << 24) | (data[20] << 16) | (data[19] << 8) | data[18];
+	// If it doesn't match the wanted width, emit a warning.
+	if(l != width) error_emit(ERROR, "bmp-width", file, l, width);
+	// Setting the structure attribute.
 	bmp->width = l;
 
-	// Checking height.
-	l = (bmp->data[25]<<24)+(bmp->data[24]<<16)+(bmp->data[23]<<8)+bmp->data[22];
-	if(l!=height) error_emit(WARNING,"bmp->data-height",file,l,height);
+	// Getting image height.
+	l = (data[25] << 24) | (data[24] << 16) | (data[23] << 8) | data[22];
+	// If it doesn't match the wanted height, emit a warning.
+	if(l != height) error_emit(WARNING, "bmp-height", file, l, height);
+	// Setting the structure attribute.
 	bmp->height = l;
 
-	// Checking depth.
-	l = (bmp->data[29]<<8) + bmp->data[28];
-	if(l!=1 && l!=16 && l!=24 && l!=32) {
-		error_emit(ERROR,"bmp-depth",file,l); return; }
+	// Getting the bitmap depth.
+	l = (data[29] << 8) | data[28];
+	// Emitting an error if it's not supported.
+	if(l != 1 && l != 16 && l != 24 && l != 32)
+	{
+		// Emitting an error.
+		error_emit(ERROR,"bmp-depth",file,l);
+		// Returning from function.
+		return;
+	}
+	// Emitting a warning for 16-bit bitmaps, that aren't fully supported.
+	if(l == 16) error_emit(WARNING, "bmp-16-bit", file);
+	// Setting the structure member.
 	bmp->depth = l;
 
-	// Reading bitmap information.
-	l = bitmap_pixels(bmp, data);
+	// Reading bitmap information into the given data pointer.
+	l = bitmap_pixels(bmp, data_ptr);
 
-	if(l == 1) error_emit(WARNING, "bmp-color", file);
-	if(l == 2) error_emit(WARNING, "bmp-16-bit", file);
+	// If the bitmap has non purely-black-and-white pixels, emit a warning.
+	if(l) error_emit(WARNING, "bmp-color", file);
 }
+
+/*
+	bitmap_pixels()
+
+	Extracts the pixels from a bitmap and writes them to a pre-allocated
+	memory area in black-and-white indexed format.
+
+	@arg	bmp	Bitmap structure to read data from.
+	@arg	address	Address to write bitmap pixels to.
+
+	@return		1 if non-black-and-white pixels are found, 0 otherwise.
+*/
 
 int bitmap_pixels(const struct Bitmap *bmp, uint8_t *address)
 {
-	unsigned int offset = (bmp->data[0x0D]<<24) | (bmp->data[0x0C]<<16) | (bmp->data[0x0B]<<8) | (bmp->data[0x0A]);
+	const unsigned int offset =
+		(bmp->data[0x0d] << 24) | (bmp->data[0x0c] << 16) |
+		(bmp->data[0x0b] << 8) | bmp->data[0x0a];
 	const uint8_t *data = bmp->data + offset;
 
-	int lineoffset = (bmp->depth == 1 ? 4 : 30 * bmp->depth >> 3);
+	int line_length = (bmp->depth == 1 ? 4 : 30 * bmp->depth >> 3);
 	int warning = 0;
 	int x,y,s;
 	int v;
 
-	lineoffset += lineoffset & 3;
+	line_length += line_length & 3;
 	for(x=0; x<76; x++) address[x] = 0;
-
-	if(bmp->depth == 16) warning = 2;
 
 	for(y=18; y+1; y--) for(x=0; x<30; x++)
 	{
@@ -154,7 +190,7 @@ int bitmap_pixels(const struct Bitmap *bmp, uint8_t *address)
 		// 32-bit assumes X8-R8-G8-B8 or A8-R8-G8-B8.
 		case 32:
 			// Computing the pixel byte offset.
-			v = lineoffset * y + (x<<2) + 1;
+			v = line_length * y + (x<<2) + 1;
 			// Computing the sum of the three channel intensities.
 			s = data[v] + data[v+1] + data[v+2];
 			// Checking pure-black-and-white warning.
@@ -166,7 +202,7 @@ int bitmap_pixels(const struct Bitmap *bmp, uint8_t *address)
 		// Handling classical 24 bits bitmaps.
 		case 24:
 			// Computing the pixel byte offset.
-			v = lineoffset * y + x * 3;
+			v = line_length * y + x * 3;
 			// Extracting the three bytes and getting their sum.
 			s = data[v] + data[v+1] + data[v+2];
 			// Checking if the pixel is different that strictly
@@ -179,7 +215,7 @@ int bitmap_pixels(const struct Bitmap *bmp, uint8_t *address)
 		// 16 bits are not well supported (weird decoded values).
 		case 16:
 			// Extracting two bytes.
-			v = lineoffset * y + (x << 1);
+			v = line_length * y + (x << 1);
 			v = data[v] + data[v+1];
 			// Extracting the three sections.
 			s  = (v & 0x7c00) >> 12;
@@ -192,7 +228,7 @@ int bitmap_pixels(const struct Bitmap *bmp, uint8_t *address)
 		// Handling monochrome bitmaps.
 		case 1: 
 			// Extracting the right byte.
-			v = lineoffset * y + (x >> 3);
+			v = line_length * y + (x >> 3);
 			// Isolating the sought bit.
 			s = data[v] & (128 >> (x & 7));
 			break;
