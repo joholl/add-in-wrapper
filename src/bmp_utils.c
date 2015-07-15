@@ -11,6 +11,7 @@
 // Standard headers.
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 // Project headers.
 #include "error.h"
@@ -19,7 +20,7 @@
 
 
 /*
-	bitmpa_read()
+	bitmap_read()
 
 	Reads a bitmap file and copies its data to the given pointer. The data
 	should be only black and white. If not, a warning is emitted and each
@@ -38,8 +39,8 @@ void bitmap_read(const char *file, unsigned int width, unsigned int height,
 		Variables declaration.
 	*/
 
-	// Declaring variables.
-	unsigned int l,i,j;
+	// Using an integer to read parts of bitmap header.
+	uint32_t l;
 	// Using a bitmap structure.
 	struct Bitmap *bmp;
 	// Using a long to store the file size to read.

@@ -1,164 +1,259 @@
+/*
+	Header inclusions.
+*/
+
+// Standard headers.
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
+
+// Module header.
 #include "error.h"
 
-struct ErrorType *error_first;
 
-void error_init(const char *programName, int defaultExitCode, int *failureIndicator)
+
+/*
+	Composed types definitions.
+
+	These types are used only in this file.
+*/
+
+// ErrorType linked list node.
+struct Error
 {
-	/*
-	**  This function inits the error module. I did not find any proper
-	**  way to init the value of error_first without calling such a function.
-	*/
+	// Error level.
+	enum Error_Level level;
 
-	// Initializes static values.
-	error_static(0,programName,defaultExitCode,failureIndicator);
+	// Activated and maskable flags.
+	int activated :4;
+	int maskable  :4;
 
-	// Inits error_first's value.
-	error_first = NULL;
+	// Error name and format.
+	const char *name;
+	const char *format;
+
+	// Linked list pointer.
+	struct Error *next;
+};
+
+
+
+/*
+	Static variables definitions.
+*/
+
+// Linked list first node.
+static struct Error *error_first = NULL;
+// Error display prefix (usually program name).
+static const char *prefix;
+// Exit code on fatal error.
+static int exit_code;
+// Failure indicator.
+static int *failure;
+
+
+
+/*
+	Function definitions.
+*/
+
+/*
+	error_init()
+
+	Initializes the error module.
+
+	@arg	program_name		Program name, shown before error.
+	@arg	default_exit_code	Exit code on fatal error.
+	@arg	failure_indicator	Integer pointer set on failure.
+*/
+
+void error_init(const char *program_name, int default_exit_code,
+	int *failure_indicator)
+{
+	// Initializing static values.
+	prefix = program_name;
+	exit_code = default_exit_code;
+	failure = failure_indicator;
 }
 
-void error_add(int level, const char *name, const char *format)
+/*
+	error_add()
+
+	Adds a new error to the error list.
+
+	@warn	The name and format pointers must point to valid data as long
+		as the errors may be emitted ! No data is copied.
+
+	@arg	level	Error level.
+	@arg	name	Error name. Error can be masked if the name begins with
+			a '~' character.
+	@arg	format	Error string format. Used through fprintf() using
+			error_emit() arguments.
+*/
+
+void error_add(enum Error_Level level, const char *name, const char *format)
 {
-	/*
-	**  This function adds an error type that can be used immediatly.
-	**  Every error type must be defined befor being used.
-	*/
-
 	// Allocating a new error type;
-	struct ErrorType *type = malloc(sizeof(struct ErrorType));
-	struct ErrorType *parser = error_first;
+	struct Error *error = malloc(sizeof(struct Error));
+	struct Error *parser = error_first;
 
-	// If no error type exists, creates the first.
-	if(!error_first) error_first = type;
-
-	// Else, adds it at the end of the linked list.
+	// If no error has been added already, setting error_first.
+	if(!error_first) error_first = error;
+	// Else, adding it at the end of the linked list.
 	else
 	{
+		// Finding the last node.
 		while(parser->next) parser = parser->next;
-		parser->next = type;
+		// Linking the new error.
+		parser->next = error;
 	}
 
-	// Initializes the error type depending of the given parameters.
-	type->maskable = 0;
-	if(*name=='~' && *(name+1)) name++, type->maskable=1;
-	type->level = level;
-	type->name = strcpy(malloc(strlen(name)+1),name);
-	type->format = strcpy(malloc(strlen(format)+1),format);
-	type->activated = 1;
-	type->next = NULL;
+
+	// If the error name begins with '~' (ignored in options), the error
+	// can be masked.
+	if(*name == '~' && name[1])
+	{
+		// Skipping the '~' to keep only the interesting name.
+		name++;
+		// Setting the corresponding flag.
+		error->maskable = 1;
+	}
+	// Otherwise, or if the name is just '~', resetting the flag.
+	else error->maskable = 0;
+
+	// Setting the error level.
+	error->level = level;
+
+	// Setting the error name and format string.
+	error->name = name;
+	error->format = format;
+
+	// Activating the error by default.
+	error->activated = 1;
+	// Linking a NULL pointer at list end.
+	error->next = NULL;
 }
+
+/*
+	error_argument()
+
+	Analyzes an argument string to disable errors. The argument must match
+	the format '-[DNWE]<error_name>'. Fatal errors obviously cannot be
+	disabled.
+
+	@arg	argument	Argument string.
+
+	@return		1 on error (unrecognized option), 0 otherwise.
+*/
 
 int error_argument(const char *argument)
 {
-	/*
-	**  This function analyses an argument string to active or de-activate
-	**  error types. 
-	*/
+	// Using an error level.
+	enum Error_Level level = -1;
+	// Using a return code.
+	int ret = 1;
+	// Using an error list parser.
+	struct Error *parser = error_first;
 
-	// Activation mode, level indicator, return value, linked list parser;
-	int activate = 1, level = 0, x = 1;
-	struct ErrorType *parser = error_first;
-
-	// Argument format : -[N|W|E][all|[no-]<error_name>]
-	if(*argument++!='-') return 1;
+	// Checking argument format : -[DNWE]<error_name>.
+	if(*argument++ != '-') return 1;
+	// Getting the error level.
 	switch(*argument)
 	{
+		// Note and Debug levels are actually the same.
+		case 'D': level = DEBUG; break;
 		case 'N': level = NOTE; break;
 		case 'W': level = WARNING; break;
 		case 'E': level = ERROR; break;
+		// Fatal errors, obviously,  cannot be disabled.
 		default : return 1;
 	}
 
+	// Disable operation needs an error name !
 	if(!*++argument) return 1;
-	if(!strncmp(argument,"no-",3)) activate=0, argument+=3;
-	if(!*argument) return 1;
 
-	do
+	printf("argument is '%s'\n", argument);
+
+	// Iterating over the errors.
+	while(parser)
 	{
-		if(parser->level==level && !strcmp(parser->name,argument) && parser->maskable)
-			parser->activated = activate, x = 0;
-	} while((parser = parser->next));
+		// Matching the maskable errors that match the given name.
+		if(parser->level == level && !strcmp(parser->name, argument)
+			&& parser->maskable)
+		{
+			// Disabling them.
+			parser->activated = 0;
+			// Setting the return value to 0.
+			ret = 0;
+		}
 
-	return x;
+		// Getting to the next error.
+		parser = parser->next;
+	}
+
+	// Returning ret, that is, 0 if any error has been disabled, 1
+	// otherwise.
+	return ret;
 }
 
-void error_emit(int level, const char *name, ...)
-{
-	/*
-	**  This function outputs an error on stdout.
-	*/
+/*
+	error_emit()
 
-	// Declarging a linked list parser and the args list.
-	struct ErrorType *parser = error_first;
+	Emits the error by printing a message on stderr, and possibly setting
+	the failure indicator to 1 (if non-null) or exiting the program.
+
+	@arg	level	Error level.
+	@arg	name	Error name.
+	@arg	...	Arguments to be given to the error format.
+*/
+
+void error_emit(enum Error_Level level, const char *name, ...)
+{
+	// Using strings to name the error types.
+	const char *types[] = { "debug", "note", "warning", "error", "fatal "
+		"error" };
+	// Using a linked list parser.
+	struct Error *parser = error_first;
+	// Using an argument list.
 	va_list args;
 
-	// Starting the va_list to give to printf().
-	va_start(args,name);
+	// Starting the va_list to get the arguments for the format.
+	va_start(args, name);
 
-	// Parsing the defined error types to match the given one.
-	do
+	// Parsing the defined error types to match the given one. It is
+	// possible to use several error messages by having two errors with the
+	// same name.
+	while(parser)
 	{
-		// Testing if parser matches the same error as the given one.
-		if(parser->level==level && !strcmp(parser->name,name) && parser->activated)
+		// Testing if current one matches the given level and name.
+		if(parser->level == level && !strcmp(parser->name, name)
+			&& parser->activated)
 		{
-			error_static(1,NULL,0,NULL);
+			// Writing the prefix.
+			fputs(prefix, stderr);
+			fputs(": ", stderr);
 
-			switch(parser->level) {
-				case FATAL: printf("fatal error: "); break;
-				case ERROR: printf("error: "); break;
-				case WARNING: printf("warning: "); break;
-				case NOTE: printf("note: "); break; }
-			vprintf(parser->format,args);
-			printf("\n");
+			// Writing the error type string representation.
+			fputs(types[level], stderr);
+			fputs(": ", stderr);
 
-			if(level==ERROR) error_static(3,NULL,0,NULL);
-			if(level==FATAL) error_static(2,NULL,0,NULL);
+			// Writing the format string, formatted with the
+			// function arguments.
+			vfprintf(stderr, parser->format, args);
+			// Adding a new line.
+			fputc('\n', stderr);
+
+			// On error, set the failure indicator if non-null.
+			if(level == ERROR) if(failure) *failure = 1;
+			// On fatal error, exiting the program.
+			if(level == FATAL) exit(exit_code);
 		}
+
+		// Getting the next error.
+		parser = parser->next;
 	}
-	// Note that is it absolutely possible to use several error messages.
-	while((parser = parser->next));
 
 	// Ending the argument list.
 	va_end(args);
-}
-
-void error_static(int x, const char *p, int e, int *f)
-{
-	/*
-	**  This function handles the user program name and the default exit
-	**  code for fatal errors.
-	*/
-
-	// Static variables.
-	static int defaultExitCode = 1;
-	static const char *programName = NULL;
-	static int *failureIndicator = NULL;
-
-	// Selecting action.
-	switch(x)
-	{
-		// Initializes parameters.
-		case 0:
-			if(p) programName = strcpy(malloc(strlen(p)+1),p);
-			defaultExitCode = e;
-			if(f) failureIndicator = f;
-			break;
-
-		// Prints program name.
-		case 1:
-			if(programName) printf("%s: ",programName);
-			break;
-
-		// Exits program.
-		case 2:
-			exit(defaultExitCode);
-
-		// Set failure indicator.
-		case 3:
-			*failureIndicator = 1;
-			break;
-	}
 }

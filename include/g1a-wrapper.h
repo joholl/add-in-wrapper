@@ -1,28 +1,42 @@
-/*********************************************
-**
-**  Main header file of g1a-wrapper tool.
-**
-*********************************************/
+/*
+	g1a-wrapper
+
+	Little command-line program that generates g1a file headers and appends
+	binary file content to output a full g1a file.
+*/
 
 #ifndef _G1A_WRAPPER_H
 	#define _G1A_WRAPPER_H 1
 
-// Type definition.
-	#ifndef _UINT8_T
-		typedef unsigned char uint8_t;
-	#endif // _UINT8_T
+/*
+	Standard header inclusions.
+*/
 
-// Options management structure definition.
-	struct Options
-	{
-		char *input;
-		char *output;
-		char name[9];
-		char version[11];
-		char internal[9];
-		char date[15];
-		uint8_t icon[76];
-	};
+#include <ctype.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+
+
+
+/*
+	Composed types definitions.
+*/
+
+// Options management structure.
+struct Options
+{
+	char *input;
+	char *output;
+	char name[9];
+	char version[11];
+	char internal[9];
+	char date[15];
+	uint8_t icon[76];
+};
 
 /*
 Offset	Size	Description
@@ -56,45 +70,53 @@ Offset	Size	Description
 0x200	...		Addin code
 */
 
-// File header structure definition.
-	struct G1A_Header
-	{ 
-		uint8_t magic[8];
-		uint8_t addin_id;
-		uint8_t unknown1[5];
-		uint8_t control1;
-		uint8_t unknown2;
-		uint8_t filesize_uint[4];
-		uint8_t control2;
-		uint8_t custom_seq[11];
-		uint8_t internal[8];
-		uint8_t gap1[3];
-		uint8_t estrips;
-		uint8_t gap2[4];
-		uint8_t version[10];
-		uint8_t gap3[2];
-		uint8_t date[14];
-		uint8_t gap4[2];
-		uint8_t bitmap[68];
-		uint8_t estrip1[80];
-		uint8_t estrip2[80];
-		uint8_t estrip3[80];
-		uint8_t estrip4[80];
-		uint8_t gap5[4];
-		uint8_t name[8];
-		uint8_t gap6[20];
-		uint8_t filesize_ulong[4];
-		uint8_t gap7[12];
-	};
+// File header structure.
+struct G1A_Header
+{ 
+	uint8_t magic[8];
+	uint8_t addin_id;
+	uint8_t unknown1[5];
+	uint8_t control1;
+	uint8_t unknown2;
+	uint8_t filesize_uint[4];
+	uint8_t control2;
+	uint8_t custom_seq[11];
+	uint8_t internal[8];
+	uint8_t gap1[3];
+	uint8_t estrips;
+	uint8_t gap2[4];
+	uint8_t version[10];
+	uint8_t gap3[2];
+	uint8_t date[14];
+	uint8_t gap4[2];
+	uint8_t bitmap[68];
+	uint8_t estrip1[80];
+	uint8_t estrip2[80];
+	uint8_t estrip3[80];
+	uint8_t estrip4[80];
+	uint8_t gap5[4];
+	uint8_t name[8];
+	uint8_t gap6[20];
+	uint8_t filesize_ulong[4];
+	uint8_t gap7[12];
+};
 
-// Function prototypes.
-	int main(int argc, char ** argv);
-	void generate(struct Options options, char *data);
-	void write(const char * inputfile, const char *outputfile, char *data);
-	void args(int argc, char **argv, struct Options *options);
-	int string_cal(char *dest, const char *src, size_t maxlength);
-	int string_format(const char *str, const char *format);
-	void help(void);
-	void format(void);
+
+
+/*
+	Function prototypes.
+*/
+
+// Main function.
+int main(int argc, char **argv);
+void generate(struct Options options, char *data);
+void write(const char * inputfile, const char *outputfile, char *data);
+void args(int argc, char **argv, struct Options *options);
+int string_cal(char *dest, const char *src, size_t maxlength);
+int string_format(const char *str, const char *format);
+// Displaying program help.
+void help(void);
+// Displaying header information.
+void info(void);
 
 #endif // _G1A_WRAPPER_H

@@ -1,56 +1,103 @@
-/*********************************************
-**
-**  Main source file of g1a-wrapper tool.
-**
-*********************************************/
-
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <time.h>
+/*
+	Header inclusions.
+*/
 
 #include "g1a-wrapper.h"
 #include "error.h"
 #include "bmp_utils.h"
 
-extern const char *_help_string;
+/*
+	main()
+
+	Program main function. Initializes the error module and calls various
+	subroutines to read the command-line options, generate the header and
+	write it.
+
+	@arg	argc	Command-line argument count.
+	@arg	argv	NULL-terminated command-line arguments array.
+
+	@return		Error code.
+*/
 
 int main(int argc, char **argv)
 {
-	// Header structure, options structure, error indicator.
+	/*
+		Error definitions.
+	*/
+
+	// Fatal errors.
+	const char *fatals[] = {
+		// No binary input file provided.
+		"no-input", "no input file",
+		// Input file cannot be read.
+		"input", "cannot open input file '%s' for reading",
+		// Output file cannot be written.
+		"output", "cannot open output file '%s' for writing",
+		// NULL terminator.
+		NULL
+	};
+
+	// Standard errors (those who begin with '~' can be masked).
+	const char *errors[] = {
+		// Unrecognized command-line option found.
+		"~option", "unrecognized option '%s'",
+		// Illegal invocation syntax (unexpected option).
+		"~illegal", "unexpected token '%s'",
+		// Alloc failure.
+		"alloc", "alloc failure (not enough resources)",
+		// Bitmap file cannot be open.
+		"bmp-no-open", "cannot open bitmap file '%s' for reading",
+		// Provided file is not a valid bitmap.
+		"bmp-valid", "file '%s' is not a valid bmp file",
+		// Bitmap format is not supported.
+		"bmp-depth", "bitmap image '%s' has unsupported depth %d",
+		// NULL terminator.
+		NULL
+	};
+
+	// Warnings (those who begin with '~' can be masked).
+	const char *warnings[] = {
+		// A field parameter is too long.
+		"~length", "%s '%s' is too long (maximum is %d characters)",
+		// A field hasn't the advised format.
+		"~format", "%s '%s' does not have expected format '%s'",
+		// The given bitmap image hasn't the right width.
+		"~bmp-width", "bitmap image '%s' has width %d, expected %d",
+		// The given bitmap image hasn't the right height.
+		"~bmp-height", "bitmap image '%s' has height %d, expected %d",
+		// NULL terminator.
+		NULL
+	};
+
+	// Using a header structure, used by pointer.
 	struct G1A_Header header;
+	// Using an options structure.
 	struct Options options;
-	int failure=0;
+	// Using a failure indicator.
+	int failure = 0;
+	// Using an iterator.
+	int i;
 
 	//Initializing error module.
-	error_init("g1a-wrapper",1,&failure);
-	error_add(FATAL,"no-input","no input file");
-	error_add(FATAL,"input","cannot open input file '%s' for reading");
-	error_add(FATAL,"output","cannot open output file '%s' for writing");
-	error_add(ERROR,"~option","unrecognized option '%s'");
-	error_add(ERROR,"~illegal","unexpected token '%s'");
-	error_add(ERROR,"bmp-no-open","cannot open input bitmap file '%s' for reading");
-	error_add(ERROR,"bmp-alloc","cannot allocate memory to read bitmap file '%s'");
-	error_add(ERROR,"bmp-valid","file '%s' is not a valid bmp file");
-	error_add(ERROR,"bmp-depth","bitmap image '%s' has unsupported depth %d");
-	error_add(WARNING,"~format","%s '%s' does not have expected format '%s'");
-	error_add(WARNING,"~length","%s '%s' is more than %d characters long");
-	error_add(WARNING,"~bmp-width","bitmap image '%s' has width %d, expected %d");
-	error_add(WARNING,"~bmp-height","bitmap image '%s' has height %d, expected %d");
+	error_init("g1a-wrapper", 1, &failure);
+
+	// Initializing various fatal errors, errors, and warnings.
+	for(i = 0; fatals[i]; i+=2) error_add(FATAL, fatals[i], fatals[i+1]);
+	for(i = 0; errors[i]; i+=2) error_add(ERROR, errors[i], errors[i+1]);
+	for(i = 0; warnings[i]; i+=2)
+		error_add(WARNING, warnings[i], warnings[i+1]);
 
 	// Parsing command-line arguments.
-	args(argc,argv,&options);
+	args(argc, argv, &options);
 
-	// If an error occurred, quits the program.
+	// If an error occurred, returning from the program.
 	if(failure) return 1;
 
 	// Generating the header according to the command-line parameters.
-	generate(options,(char *)&header);
+	generate(options, (char *)&header);
 
 	// Writing the header and the binary content.
-	write(options.input,options.output,(char *)&header);
+	write(options.input, options.output, (char *)&header);
 
 	return 0;
 }
@@ -131,9 +178,8 @@ void args(int argc, char **argv, struct Options *options)
 	{
 		// Help command.
 		if(!strcmp(argv[i], "-h") || !strcmp(argv[i],"--help")) help();
-		// Format command.
-		if(!strcmp(argv[i], "-f") || !strcmp(argv[i],"--format"))
-			format();
+		// Info command.
+		if(!strcmp(argv[i], "-i") || !strcmp(argv[i],"--info")) info();
 
 		// Output filename.
 		if(!strcmp(argv[i],"-o")) options->output = argv[++i];
@@ -266,6 +312,14 @@ int string_cal(char *dest, const char *src, size_t maxlength)
 	return x;
 }
 
+/*
+	sring_format()
+
+	This simple function checks if a string matches the given fixed-length
+	format.
+	
+*/
+
 int string_format(const char *str, const char *format)
 {
 	/*
@@ -287,7 +341,7 @@ int string_format(const char *str, const char *format)
 			case 'A': if(!isupper(*str)) return 1; break;
 			case '0': if(!isdigit(*str)) return 1; break;
 			case '*': if(!isprint(*str)) return 1; break;
-			default : if(*str!=*format)  return 1; break;
+			default: if(*str != *format) return 1; break;
 		}
 
 		str++;
@@ -299,48 +353,80 @@ int string_format(const char *str, const char *format)
 
 void help(void)
 {
-	puts(_help_string);
+	puts(
+"Usage: g1a-wrapper <bin_file> [options]\n"
+"\n"
+"g1a-wrapper creates a g1a file (add-in application for CASIO fx-9860G\n"
+"calculator series) from the given binary file and options.\n"
+"\n"
+"Available options :\n"
+"  -o, --output=<file>  Output file name. Default is 'addin.g1a'.\n"
+"  -i, --icon=<bitmap>  Program icon, must be a valid non-indexed bmp file.\n"
+"                       Default is a blank icon.\n"
+"  -n, --name=<name>    Name of the add-in application. At most 8 characters.\n"
+"                       Default is the truncated output filename.\n"
+"  -v  --version=<text> Program version. Format 'MM.mm.pppp' advised. Default\n"
+"                       is '00.00.0000'.\n"
+"  -N, --internal=<name>Internal name of the program. Uppercase and '@' at\n"
+"                       beginning advised. Default is '@ADDIN'.\n"
+"  -d, --date=<date>    Date of the build, using format 'yyyy.MMdd.hhmm'.\n"
+"                       Default is the current time.\n"
+"\n"
+"  -h, --help           Displays this help.\n"
+"  -i, --info           Displays header format information.\n"
+"\n"
+"You can disable warnings during program execution.\n"
+"\n"
+"Warning options :\n"
+"  -Wlength     One of the parameters is too long and will be truncated.\n"
+"  -Wformat     The parameter doesn't fit the default advised format.\n"
+"\n"
+"Some errors can also be masked. However, forcing execution of the wrapper can\n"
+"lead to the generation of an incorrect g1a file.\n"
+"\n"
+"Error options :\n"
+"  -Eoption     Unrecognized option found.\n"
+"  -Eillegal    Illegal invocation syntax (unexpected option found).\n"
+	);
 
 	exit(0);
 }
 
-void format(void)
+void info(void)
 {
-	printf("g1a header data format :\n\n");
-	printf("0x%03x magic\n",
-		(unsigned int)offsetof(struct G1A_Header, magic));
-	printf("0x%03x addin_id\n",
-		(unsigned int)offsetof(struct G1A_Header, addin_id));
-	printf("0x%03x control1\n",
-		(unsigned int)offsetof(struct G1A_Header, control1));
-	printf("0x%03x filesize_uint\n",
-		(unsigned int)offsetof(struct G1A_Header, filesize_uint));
-	printf("0x%03x control2\n",
-		(unsigned int)offsetof(struct G1A_Header, control2));
-	printf("0x%03x custom_seq\n",
-		(unsigned int)offsetof(struct G1A_Header, custom_seq));
-	printf("0x%03x internal\n",
-		(unsigned int)offsetof(struct G1A_Header, internal));
-	printf("0x%03x estrips\n",
-		(unsigned int)offsetof(struct G1A_Header, estrips));
-	printf("0x%03x version\n",
-		(unsigned int)offsetof(struct G1A_Header, version));
-	printf("0x%03x date\n",
-		(unsigned int)offsetof(struct G1A_Header, date));
-	printf("0x%03x bitmap\n",
-		(unsigned int)offsetof(struct G1A_Header, bitmap));
-	printf("0x%03x estrip1\n",
-		(unsigned int)offsetof(struct G1A_Header, estrip1));
-	printf("0x%03x estrip2\n",
-		(unsigned int)offsetof(struct G1A_Header, estrip2));
-	printf("0x%03x estrip3\n",
-		(unsigned int)offsetof(struct G1A_Header, estrip3));
-	printf("0x%03x estrip4\n",
-		(unsigned int)offsetof(struct G1A_Header, estrip4));
-	printf("0x%03x name\n",
-		(unsigned int)offsetof(struct G1A_Header, name));
-	printf("0x%03x filesize_ulong\n",
-		(unsigned int)offsetof(struct G1A_Header, filesize_ulong));
+	puts(
+		"Add-in header format :\n"
+		"\n"
+		"Offset	Size	Description\n"
+		"0x000	8	\"USBPower\"\n"
+		"0x008	1	0xF3 (AddIn)\n"
+		"0x009	5	{ 0x00, 0x10, 0x00, 0x10, 0x00 }\n"
+		"0x00E	1	@0x13 + 0x41\n"
+		"0x00F	1	0x01\n"
+		"0x010	4	File size: unsigned int, big endian\n"
+		"0x014	1	@0x13 + 0xB8\n"
+		"0x015	9	[Unsignificant]\n"
+		"0x01E	2	Number of objects (if MCS)\n"
+		"0x020	8	Internal name '@APPNAME'\n"
+		"0x028	3	-\n"
+		"0x02B	1	Number of estrips\n"
+		"0x02C	4	-\n"
+		"0x030	10	Version 'MM.mm.pppp'\n"
+		"0x03A	2	-\n"
+		"0x03C	14	Date 'yyyy.MMdd.hhmm'\n"
+		"0x04A	2	-\n"
+		"0x04C	68	30*17 icon.\n"
+		"0x090	80	eStrip 1\n"
+		"0x0E0	80	eStrip 2\n"
+		"0x130	80	eStrip 3\n"
+		"0x180	80	eStrip 4\n"
+		"0x1D0	4	-\n"
+		"0x1D4	8	Program name\n"
+		"0x1DC	20	-\n"
+		"0x1F0	4	File size: unsigned long, big endian\n"
+		"0x1F4	12	-\n"
+		"0x200	...	Binary content\n"
+	);
 
 	exit(0);
 }
