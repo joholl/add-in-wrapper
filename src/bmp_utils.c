@@ -157,7 +157,7 @@ void bitmap_read(const char *file, unsigned int width, unsigned int height,
 /*
 	bitmap_pixels()
 
-	Extracts the pixels from a bitmap and writes them to a pre-allocated
+	Extracts the pixels from a bitmap and writes them to a preallocated
 	memory area in black-and-white indexed format.
 
 	@arg	bmp	Bitmap structure to read data from.

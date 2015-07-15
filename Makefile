@@ -2,33 +2,32 @@
 #  Makefile of g1a-wrapper tool.
 #
 
-.PHONY: all install clear mrproper build
+.PHONY: all install clean mrproper
 
-CC      = gcc
-CCFLAGS = -Iinclude -W -Wall
-CSRC    = $(shell find src/ -name '*.c')
-COBJ    = $(patsubst src/%.c, build/%.o, $(CSRC))
-CHDR    = $(shell find include/ -name '*.h')
+cc    = gcc
+as    = as
+flags = -Iinclude -W -Wall
+obj   = build/bmp_utils.o build/g1a-wrapper.o build/error.o
+hdr   = include/bmp_utils.h include/g1a-wrapper.h include/error.h
 
-OUTPUT  = build/g1a-wrapper
+output = build/g1a-wrapper
 
-all: build $(CHDR) $(OUTPUT)
+all: build $(hdr) $(output)
+
+install:
+	sudo cp $(output) ~/bin
 
 build:
 	mkdir -p build
 
-install: all
-	mkdir -p ~/bin
-	cp $(OUTPUT) ~/bin
-
-$(OUTPUT): $(COBJ)
-	$(CC) $^ -o $@ $(CCFLAGS)
+$(output): $(obj)
+	$(cc) $^ -o $@ $(flags)
 
 build/%.o: src/%.c
-	$(CC) -c $< -o $@ $(CCFLAGS)
+	$(cc) -c $^ -o $@ $(flags)
 
-clear:
-	rm -f bin/*.o
+clean:
+	rm -f build/*.o
 
-mrproper: clear
-	rm -f $(OUTPUT)
+mrproper: clean
+	rm -f $(output)

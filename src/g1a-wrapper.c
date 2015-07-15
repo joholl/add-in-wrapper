@@ -1,4 +1,13 @@
 /*
+	g1a-wrapper
+
+	Little command-line program that generates g1a file headers and appends
+	binary file content to output a full g1a file.
+*/
+
+
+
+/*
 	Header inclusions.
 */
 
@@ -75,8 +84,15 @@ int main(int argc, char **argv)
 		NULL
 	};
 
-	// Using a header structure, used by pointer.
-	struct G1A_Header header;
+	const char *notes[] = {
+		// Default value used.
+		"~default", "No %s provided, falling back to '%s'",
+		// NULL terminator.
+		NULL
+	};
+
+	// Using memory for a header.
+	char header[0x200];
 	// Using an options structure.
 	struct Options options;
 	// Using a failure indicator.
@@ -87,11 +103,12 @@ int main(int argc, char **argv)
 	//Initializing error module.
 	error_init("g1a-wrapper", 1, &failure);
 
-	// Initializing various fatal errors, errors, and warnings.
+	// Initializing various fatal errors, errors, warnings and notes.
 	for(i = 0; fatals[i]; i+=2) error_add(FATAL, fatals[i], fatals[i+1]);
 	for(i = 0; errors[i]; i+=2) error_add(ERROR, errors[i], errors[i+1]);
 	for(i = 0; warnings[i]; i+=2)
 		error_add(WARNING, warnings[i], warnings[i+1]);
+	for(i = 0; notes[i]; i+=2) error_add(NOTE, notes[i], notes[i+1]);
 
 	// Parsing command-line arguments.
 	args(argc, argv, &options);
@@ -110,228 +127,382 @@ int main(int argc, char **argv)
 	}
 
 	// Generating the header according to the command-line parameters.
-	generate(options, (char *)&header);
+	generate(options, header);
 
 	// Writing the header and the binary content.
-	write(options.input, options.output, (char *)&header);
+	write(options.input, options.output, header);
 
 	return 0;
 }
 
-void generate(struct Options options, char *data)
-{
-	unsigned char unknown1[5] = { 0x00,0x10,0x00,0x10,0x00 };
-	int i;
+/*
+	args()
 
-	strncpy(data,"USBPower",8);
-	data[0x008] = 0xF3;
-	for(i=0;i<5;i++) data[0x009+i] = unknown1[i];
-	data[0x00F] = 0x01;
-	for(i=0;i<11;i++) data[0x015+i] = 0x00;
-	strncpy(data+0x20,options.internal,8);
-	for(i=0x028;i<0x02B;i++) data[i] = 0;
-	data[0x02B] = 0;
-	for(i=0x02C;i<0x030;i++) data[i] = 0;
-	strncpy(data+0x030,options.version,10);
-	for(i=0x03A;i<0x03C;i++) data[i] = 0;
-	strncpy(data+0x03C,options.date,14);
-	for(i=0x04A;i<0x04C;i++) data[i] = 0;
-	memcpy(data+0x04C,options.icon+4,68);
-	for(i=0x090;i<0x1D0;i++) data[i] = 0;
-	for(i=0x1D0;i<0x1D4;i++) data[i] = 0;
-	strncpy(data+0x1D4,options.name,8);
-	for(i=0x1DC;i<0x200;i++) data[i] = 0;
-}
+	Parses the command-line arguments and fills the options structure
+	according to their meanings.
 
-void write(const char *inputfile, const char *outputfile, char *data)
-{
-	FILE *input = fopen(inputfile,"rb");
-	FILE *output = fopen(outputfile,"wb");
-	unsigned char byte;
-	unsigned int size;
-	int i;
-
-	if(!input) error_emit(FATAL,"input",inputfile);
-	if(!output) error_emit(FATAL,"output",outputfile);
-
-	fseek(input,0,SEEK_END);
-	size = ftell(input)+0x200;
-	fseek(input,0,SEEK_SET);
-
-	data[0x00E] = size + 0x41;
-	data[0x014] = size + 0xB8;
-	for(i=0; i<4; i++) data[0x010+i] = data[0x1f0+i] = *(((char *)&size)+3-i);
-
-	for(i=0;i<0x020;i++) data[i] = ~data[i];
-	fwrite(data,1,sizeof(struct G1A_Header),output);
-
-	while(fread(&byte,1,1,input)) fwrite(&byte,1,1,output);
-
-	fclose(input);
-	fclose(output);
-}
+	@arg	argc	Number of command-line arguments.
+	@arg	argv	NULL-terminated array of command-line arguments.
+	@arg	options	Options structure pointer to fill.
+*/
 
 void args(int argc, char **argv, struct Options *options)
 {
-	// Declaring variables.
+	// Using an iterator to parse the various arguments.
 	int i;
 
-	// Initializing option values.
+	/*
+		Initializing values.
+	*/
+
+	// By default, action is to wrap, not to dump.
 	options->dump = 0;
+	// No default file specified.
 	options->input = NULL;
 	options->output = NULL;
+	// Empty program name and build date.
 	*options->name = 0;
-	strcpy(options->version,"00.00.0000");
-	strcpy(options->internal,"@ADDIN");
 	*options->date = 0;
+	// Default version and internal name, as said in the help page.
+	strcpy(options->version, "00.00.0000");
+	strcpy(options->internal, "@ADDIN");
 
 	// Parsing the loop to detect the error parameters.
-	for(i=1;i<argc;i++) error_argument(argv[i]);
+	for(i=1; i < argc; i++)
+	{
+		// If the argument show an error, mask it.
+		if(!error_argument(argv[i])) argv[i] = NULL;
+	}
 
 	// Parsing the different given parameters.
 	for(i=1;i<argc;i++)
 	{
-		// Help command.
-		if(!strcmp(argv[i], "-h") || !strcmp(argv[i],"--help")) help();
-		// Info command.
-		if(!strcmp(argv[i],"--info")) info();
+		// Skipping NULL arguments.
+		if(!argv[i]) continue;
 
+
+
+		/*
+			Handling commands.
+		*/
+
+		// Handling command -h, --help : help page.
+		if(!strcmp(argv[i], "-h") || !strcmp(argv[i],"--help")) help();
+		// Handling command --info : data header information.
+		if(!strcmp(argv[i],"--info")) info();
+		// Handling command -d : g1a file dump.
 		if(!strcmp(argv[i],"-d"))
 		{
-			options->input = argv[++i];
+			// Setting the dump option.
 			options->dump = 1;
-			continue;
+			// Incrementing parsing index. The input filename will
+			// be automatically set.
+			i++;
 		}
 
-		// Output filename.
+
+
+		/*
+			Handling general options.
+		*/
+
+		// Handling option -o : output file name.
 		if(!strcmp(argv[i],"-o")) options->output = argv[++i];
-		else if(!strncmp(argv[i],"--output=",9)) options->output = argv[i]+9;
 
-		// Application name.
-		else if(!strcmp(argv[i],"-n") || !strncmp(argv[i],"--name=",7))
+		// Handling option -n : application name.
+		else if(!strcmp(argv[i],"-n"))
 		{
-			char *name = argv[i][1]=='-' ? argv[i]+7 : argv[++i];
-			if(string_cal(options->name,name,8))
-				error_emit(WARNING,"length","application name",name,8);
+			// Getting and copying the program name.
+			char *name = argv[++i];
+			strncpy(options->name, name, 8);
+			// Emitting a length warning if it exceeds 8 bytes.
+			if(strlen(name) > 8) error_emit(WARNING, "length",
+				"application name", name, 8);
 		}
 
-		// Program icon.
-		else if(!strcmp(argv[i],"-i") || !strncmp(argv[i],"--icon=",7))
+		// Handling option -i : program icon.
+		else if(!strcmp(argv[i],"-i"))
 		{
-			char *iconfile = argv[i][1]=='-' ? argv[i]+7 : argv[++i];
-			bitmap_read(iconfile,30,19,options->icon);
+			// Reading the bitmap data (this is a heavy procedure).
+			bitmap_read(argv[++i], 30, 19, options->icon);
 		}
 
-		// Program version.
-		else if(!strcmp(argv[i],"-v") || !strncmp(argv[i],"--version=",10))
+
+
+		/*
+			Handling advanced options.
+		*/
+
+		// Handling option --version : program version.
+		else if(!strncmp(argv[i],"--version=",10))
 		{
-			char *version = argv[i][1]=='-' ? argv[i]+10 : argv[++i];
-			if(string_cal(options->version,version,10))
-				error_emit(WARNING,"length","version string",version,10);
-			else if(string_format(options->version,"00.00.0000"))
-				error_emit(WARNING,"format","version string",options->version,"MM.mm.pppp");
+			// Getting the version string.
+			char *version = argv[i] + 10;
+			// Copying it to the corresponding field.
+			strncpy(options->version, version, 10);
+
+			// Emitting a warning if it's too long.
+			if(strlen(version) > 10) error_emit(WARNING, "length",
+				"version string", version,10);
+			// Or if it doesn't matches the default format.
+			else if(string_format(version,"00.00.0000"))
+				error_emit(WARNING, "format", "version string",
+				options->version,"MM.mm.pppp");
 		}
 
-		// Build date.
-		else if(!strcmp(argv[i],"-d") || !strncmp(argv[i],"--date=",7))
+		// Handling option --date : build date.
+		else if(!strncmp(argv[i], "--date=", 7))
 		{
-			char *date = argv[i][1]=='-' ? argv[i]+7 : argv[++i];
-			if(string_cal(options->date,date,14))
-				error_emit(WARNING,"length","date string",date,14);
-			else if(string_format(options->date,"0000.0000.0000"))
-				error_emit(WARNING,"format","date string",options->date,"yyyy.MMdd.hhmm");
+			// Getting the date string.
+			char *date = argv[i] + 7;
+			// Copying it to the right field.
+			strncpy(options->date, date, 14);
+
+			if(strlen(date) > 14) error_emit(WARNING, "length",
+				"date string", date, 14);
+			else if(string_format(date,"0000.0000.0000"))
+				error_emit(WARNING, "format", "date string",
+				options->date, "yyyy.MMdd.hhmm");
 		}
 
-		// Internal application name.
-		else if(!strcmp(argv[i],"-N") || !strncmp(argv[i],"--internal=",11))
+		// Handling option --internal : internal program name.
+		else if(!strncmp(argv[i], "--internal=", 11))
 		{
-			char *internal = argv[i][1]=='-' ? argv[i]+11 : argv[++i];
-			if(string_cal(options->internal,internal,8))
-				error_emit(WARNING,"length","internal name",internal,8);
+			// Getting the internal name.
+			char *internal = argv[i] + 11;
+			// Copying it to its field.
+			strncpy(options->internal, internal, 8);
+
+			if(strlen(internal) > 8) error_emit(WARNING, "length",
+				"internal name", internal, 8);
 			else if(string_format(options->internal,"@AAAAAAA"))
-				error_emit(WARNING,"format","internal name",options->internal,"@[A-Z]{0,7}");
+				error_emit(WARNING, "format", "internal name",
+				options->internal, "@[A-Z]{0,7}");
 		}
-
-		// Testing if the argument is disabling some errors.
-		else if(!error_argument(argv[i]));
 
 		// Looking for an unrecognized option.
-		else if(*(argv[i])=='-') error_emit(ERROR,"option",argv[i]);
+		else if(*(argv[i]) == '-')
+		{
+			// Emitting an error containing the argument.
+			error_emit(ERROR, "option", argv[i]);
+		}
 
 		// Everything else is considered as the binary file name.
 		else
 		{
-			if(options->input) error_emit(ERROR,"illegal",argv[i]);
+			// If there is already an input file.
+			if(options->input)
+			{
+				// Emitting an error.
+				error_emit(ERROR, "illegal", argv[i]);
+				// Continuing to prevent re-assignment.
+				continue;
+			}
+
+			// Setting the input file name.
 			options->input = argv[i];
 		}
 	}
 
 	// Testing if a input binary file was given.
-	if(!options->input) error_emit(FATAL,"no-input");
+	if(!options->input) error_emit(FATAL, "no-input");
+
+	// Skipping all those default values if the wanted action is to dump
+	//a g1a file.
+	if(options->dump) return;
 
 	// Setting the default output filename if no one was given.
 	if(!options->output)
 	{
+		// Looking for the dot.
 		char *tmp = strrchr(options->input,'.');
+		// Using an integer to store the filename base length.
 		int length;
+
+		// If no dot is found, going to the string end.
 		if(!tmp) tmp = options->input + strlen(options->input);
+		// Computing the base name length.
 		length = tmp - options->input;
-		options->output = malloc(length+5);
-		strncpy(options->output,options->input,length);
-		strcpy(options->output+length,".g1a");
+
+		// Allocating data to output (IMPROPER: will not be freed).
+		options->output = malloc(length + 5);
+		// Copying the base name.
+		strncpy(options->output, options->input, length);
+		// Appending extension '.g1a'.
+		strcpy(options->output + length, ".g1a");
+
+		// Emitting a note.
+		error_emit(NOTE, "default", "output filename",
+			options->output);
 	}
 
 	// Setting the default filename if no one was given.
 	if(!*options->name)
 	{
-		char *tmp = strrchr(options->output,'.');
+		// Looking for the dot in the binary file name.
+		char *dot = strrchr(options->output, '.');
+		// Looking for the slash.
+		char *sla = strrchr(options->output, '/');
+		// Using an integer to store the length of the base name.
 		int length;
-		if(!tmp) tmp = options->output + strlen(options->output);
-		length = tmp - options->output;
-		if(length>8) length=8;
-		strncpy(options->name,options->output,length);
+
+		// If no slash nor dot is found, include the whole name.
+		if(!dot) dot = options->output + strlen(options->output);
+		if(!sla) sla = options->output;
+
+		// Computing the length of the base name.
+		length = dot - sla;
+		// Limiting it to eight characters.
+		if(length > 8) length = 8;
+
+		// Copying the program name.
+		strncpy(options->name, options->output, length);
+		// Adding a terminating NUL character.
 		options->name[length] = 0;
 	}
 
 	// Setting the default build date if no one was given.
 	if(!*options->date)
 	{
+		// Using a raw time and a time structure pointer.
 		time_t rawtime;
-		struct tm *timeinfo;
+		struct tm *info;
 
+		// Getting the raw time.
 		time(&rawtime);
-		timeinfo = localtime(&rawtime);
+		// Getting time information from raw time.
+		info = localtime(&rawtime);
 
+		// Generating a date string from the structure informations.
 		sprintf(options->date,"%04d.%02d%02d.%02d%02d",
-			timeinfo->tm_year+1900, timeinfo->tm_mon+1, timeinfo->tm_mday,
-			timeinfo->tm_hour, timeinfo->tm_min);
+			info->tm_year + 1900, info->tm_mon + 1, info->tm_mday,
+			info->tm_hour, info->tm_min);
 	}
 }
 
-int string_cal(char *dest, const char *src, size_t maxlength)
+/*
+	generate()
+
+	Generates a g1a header structure according to the given options.
+
+	@arg	options	Options structure.
+	@arg	data	Address of g1a header structure.
+*/
+
+void generate(struct Options options, char *data)
 {
-	/*
-	**  String manipulation additional function : copy and limit.
-	**  Copies the string and limits the size to the given limit.
-	**  Returns 1 if the string was shortened, or 0 in any other case.
-	*/
+	// Using a predefined array for an unknown five-byte sequence.
+	unsigned char unknown[5] = { 0x00, 0x10, 0x00, 0x10, 0x00 };
 
-	// These are return value, incremental counter, effective size to copy.
-	int x=0, i=0;
-	int length=0;
+	// As there are many unknown or null areas in the header, initializing
+	// all the data with zeros.
+	memset(data, 0, 0x200);
 
-	// Gets source string length.
-	while(src[length]) length++;
+	// Copying string "USBPower", that appears in system all files in the
+	// calculator's file system.
+	strcpy(data, "USBPower");
+	// This flag indicates that the current file is an add-in.
+	data[8] = 0xf3;
+	// These five bytes appear insignificant.
+	memcpy(data + 9, unknown, 5);
+	// Skipping a checksum.
 
-	// Adjusts the size to copy.
-	if((size_t)length > maxlength) length=maxlength, x=1;
+	// This byte role is quite unknown.
+	data[0x00F] = 0x01;
+	// Skipping a file size and a checksum.
 
-	// Copies the string and adds a null-terminating character.
-	while(i<length) dest[i] = src[i], i++;
-	dest[length] = 0;
+	// These nine first bytes also seem insignificant, the last two
+	// represent the number of objects in an MCS file (not interesting
+	// here).
+	memset(data + 15, 0, 11);
 
-	// Returns from subroutine.
-	return x;
+	// Here begins the add-in header.
+	// Writing the application internal name.
+	strncpy(data + 32, options.internal, 8);
+	// Writing the number of e-strips (not handled here).
+	data[43] = 0;
+	// Writing the program version.
+	strncpy(data + 48, options.version, 10);
+	// Writing the build date.
+	strncpy(data + 60, options.date, 14);
+	// Writing the program icons.
+	memcpy(data + 76, options.icon + 4, 68);
+	// Skipping the e-strips data.
+
+	// Writing the program name.
+	strncpy(data + 468, options.name, 8);
+	// Skipping a file size.
+}
+
+/*
+	write()
+
+	Write the header content to the output file, and then appends the
+	contents of the input file.
+	Also computes and writes total file size and checksums.
+
+	@arg	input_file	Input binary file name.
+	@arg	output_file	Output g1a file name.
+	@arg	data		Header data address (casted as char *).
+*/
+
+void write(const char *input_file, const char *output_file, char *data)
+{
+	// Using input and output file pointers.
+	FILE *input, *output;
+	// Using an unsigned int to store file size.
+	unsigned int size;
+	// Using a byte.
+	uint8_t byte;
+	// Using an iterator.
+	int i;
+
+	// Opening input file.
+	input = fopen(input_file, "rb");
+	// Handling failure with a fatal error.
+	if(!input) error_emit(FATAL, "input", input_file);
+
+	// Opening output file.
+	output = fopen(output_file, "wb");
+	// Handling failure with a fatal error.
+	if(!output)
+	{
+		// Closing the input file.
+		fclose(input);
+		// Emitting the fatal error.
+		error_emit(FATAL,"output",output_file);
+	}
+
+	// Getting the total file size.
+	fseek(input, 0, SEEK_END);
+	// Adding 0x200 bytes for the g1a header.
+	size = ftell(input) + 0x200;
+	fseek(input, 0, SEEK_SET);
+
+	// Computing the checksums (automatically truncated).
+	data[0x00e] = size + 0x41;
+	data[0x014] = size + 0xB8;
+	// Writing the file size at offsets 0x010 and 0x1f0.
+	for(i=0; i<4; i++)
+	{
+		// Getting a byte in the file size (this cast does not break
+		// the strict aliasing rule).
+		byte = *(((uint8_t *)&size) + 3 - i);
+		// Writing the current byte in the data.
+		data[0x010 + i] = data[0x1f0 + i] = byte;
+	}
+
+	// Inverting the MCS standard header.
+	for(i=0; i < 0x020; i++) data[i] = ~data[i];
+	// Writing the header to the file.
+	fwrite(data, 1, 0x200, output);
+
+	// Copying binary data.
+	while(fread(&byte, 1, 1, input)) fwrite(&byte, 1, 1, output);
+
+	// Closing the input and output files.
+	fclose(input);
+	fclose(output);
 }
 
 /*
@@ -339,38 +510,51 @@ int string_cal(char *dest, const char *src, size_t maxlength)
 
 	This simple function checks if a string matches the given fixed-length
 	format.
+	If the format is shorter than the string (and the format matches all
+	the beginning of the string), the string matches.
+
+	List of special characters :
+	-  'a' = [a-z]
+	-  'A' = [A-Z]
+	-  '0' = [0-9]
+	-  '*' = everything printable
+	Everything else is literal.
+
+	@arg	string	String to test.
+	@arg	format	Format to match.
+
+	@return		0 if the string matches, 1 otherwise.
 	
 */
 
 int string_format(const char *str, const char *format)
 {
-	/*
-	**  String manipulation additional function : format.
-	**  Checks if a given string matches a template. It is not as complex
-	**  as regexs, it just checks characters one by one. If format is shorter
-	**  than str, the function returns 1. If str is shorter, the function
-	**  returns the result of the comparison.
-	**  Returns 0 if str matches the given format.
-	**  'a' = [a-z], 'A' = [A-Z], '0' = [0-9], '*' = everything printable.
-	**  Every other character should be exactly the same.
-	*/
-
+	// Iterating over the characters.
 	while(*str && *format)
 	{
+		// Handling the current character.
 		switch(*format)
 		{
+			// Handling lowercase letters with islower().
 			case 'a': if(!islower(*str)) return 1; break;
+			// Handling uppercase letters with isupper().
 			case 'A': if(!isupper(*str)) return 1; break;
+			// Handling decimal digits with isdigit().
 			case '0': if(!isdigit(*str)) return 1; break;
+			// Handling printable characters with isprint().
 			case '*': if(!isprint(*str)) return 1; break;
+			// Handling anything else as literal.
 			default: if(*str != *format) return 1; break;
 		}
 
+		// Incrementing the two pointer.
 		str++;
 		format++;
 	}
 
-	return (*format==0 && *str);
+	// At this point, the string matches, except if it's longer that the
+	// format.
+	return !*format;
 }
 
 /*
@@ -491,7 +675,7 @@ void dump(const char *filename)
 	puts("'");
 
 	// Printing the program build date.
-	printf("Build data     '");
+	printf("Build date     '");
 	ptr = data + 0x03c;
 	// Printing the header characters and a line break.
 	while(ptr < data + 0x04a && *ptr) putchar(*ptr++);
@@ -512,36 +696,40 @@ void help(void)
 "\n"
 "g1a-wrapper creates a g1a file (add-in application for CASIO fx-9860G\n"
 "calculator series) from the given binary file and options.\n"
+"\n\n"
+"General options :\n"
+"  -o   Output file name. Default is 'addin.g1a'.\n"
+"  -i   Program icon, must be a valid non-indexed bmp file.\n"
+"       Default is a blank icon.\n"
+"  -n   Name of the add-in application. At most 8 characters.\n"
+"       Default is the truncated output filename.\n"
 "\n"
-"Available options :\n"
-"  -o, --output=<file>  Output file name. Default is 'addin.g1a'.\n"
-"  -i, --icon=<bitmap>  Program icon, must be a valid non-indexed bmp file.\n"
-"                       Default is a blank icon.\n"
-"  -n, --name=<name>    Name of the add-in application. At most 8 characters.\n"
-"                       Default is the truncated output filename.\n"
-"  -v  --version=<text> Program version. Format 'MM.mm.pppp' advised. Default\n"
-"                       is '00.00.0000'.\n"
-"  -N, --internal=<name>Internal name of the program. Uppercase and '@' at\n"
-"                       beginning advised. Default is '@ADDIN'.\n"
-"  -d, --date=<date>    Date of the build, using format 'yyyy.MMdd.hhmm'.\n"
-"                       Default is the current time.\n"
+"Advanced options :\n"
+"  --version=<text>   Program version. Format 'MM.mm.pppp' advised. Default\n"
+"                     is '00.00.0000'.\n"
+"  --internal=<name>  Internal name of the program. Uppercase and '@' at\n"
+"                     beginning advised. Default is '@ADDIN'.\n"
+"  --date=<date>      Date of the build, using format 'yyyy.MMdd.hhmm'.\n"
+"                     Default is the current time.\n"
 "\n"
 "Other options :\n"
 "  -h, --help           Displays this help.\n"
-"  --info               Displays header format information.\n"
-"\n"
-"You can disable warnings during program execution.\n"
+"      --info           Displays header format information.\n"
+"  -d                   Display informations about a g1a file.\n"
+"\n\n"
+"You may also disable some warnings or errors during program execution.\n"
+"However, disabling errors is strongly discouraged.\n"
 "\n"
 "Warning options :\n"
-"  -Wlength     One of the parameters is too long and will be truncated.\n"
-"  -Wformat     The parameter doesn't fit the default advised format.\n"
-"\n"
-"Some errors can also be masked. However, forcing execution of the wrapper can\n"
-"lead to the generation of an incorrect g1a file.\n"
+"  -Wlength       One of the parameters is too long and will be truncated.\n"
+"  -Wformat       The parameter doesn't fit the default advised format.\n"
+"  -Wbmp-width    The icon does not have the expected width.\n"
+"  -Wbmp-height   The icon does not have the expected height.\n"
+"  -Wbmp-color    The bitmap icon is not absolutely blank-and-white.\n"
 "\n"
 "Error options :\n"
-"  -Eoption     Unrecognized option found.\n"
-"  -Eillegal    Illegal invocation syntax (unexpected option found).\n"
+"  -Eoption       Unrecognized option found.\n"
+"  -Eillegal      Illegal invocation syntax (unexpected option found).\n"
 	);
 
 	// Exiting the program.
