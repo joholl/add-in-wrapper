@@ -124,37 +124,84 @@ void bitmap_read(const char *file, unsigned int width, unsigned int height,
 	bmp->depth = l;
 
 	// Reading bitmap information.
-	bitmap_pixels(bmp,data);
+	l = bitmap_pixels(bmp, data);
+
+	if(l == 1) error_emit(WARNING, "bmp-color", file);
+	if(l == 2) error_emit(WARNING, "bmp-16-bit", file);
 }
 
-void bitmap_pixels(const struct Bitmap *bmp, uint8_t *address)
+int bitmap_pixels(const struct Bitmap *bmp, uint8_t *address)
 {
 	unsigned int offset = (bmp->data[0x0D]<<24) | (bmp->data[0x0C]<<16) | (bmp->data[0x0B]<<8) | (bmp->data[0x0A]);
 	const uint8_t *data = bmp->data + offset;
-	int lineoffset = (bmp->depth==1 ? 4 : 30*bmp->depth>>3);
+
+	int lineoffset = (bmp->depth == 1 ? 4 : 30 * bmp->depth >> 3);
 	int warning = 0;
 	int x,y,s;
+	int v;
 
 	lineoffset += lineoffset & 3;
-	for(x=0;x<76;x++) address[x] = 0;
+	for(x=0; x<76; x++) address[x] = 0;
 
-	for(y=18;y+1;y--/*,fputc('\n',stdout)*/) for(x=0;x<30;x++)
+	if(bmp->depth == 16) warning = 2;
+
+	for(y=18; y+1; y--) for(x=0; x<30; x++)
 	{
+		// Extracting a pixel using various methods depending on the
+		// bitmap depth.
 		switch(bmp->depth)
 		{
-			case 32: s = data[lineoffset*y+(x<<2)+1] != 0; break;
-			case 24: s = data[lineoffset*y+x*3] != 0; break;
-			case 16: s = data[lineoffset*y+(x<<1)+1]&32 != 0; break;
-			case 1:  s = ~data[lineoffset*y+(x>>3)]&(128>>(x&7)); break;
+		// 32-bit assumes X8-R8-G8-B8 or A8-R8-G8-B8.
+		case 32:
+			// Computing the pixel byte offset.
+			v = lineoffset * y + (x<<2) + 1;
+			// Computing the sum of the three channel intensities.
+			s = data[v] + data[v+1] + data[v+2];
+			// Checking pure-black-and-white warning.
+			if(s && s != 765) warning = 1;
+			// Reducing to boolean.
+			s = (s < 384);
+			break;
+
+		// Handling classical 24 bits bitmaps.
+		case 24:
+			// Computing the pixel byte offset.
+			v = lineoffset * y + x * 3;
+			// Extracting the three bytes and getting their sum.
+			s = data[v] + data[v+1] + data[v+2];
+			// Checking if the pixel is different that strictly
+			// black or white.
+			if(s && s != 765) warning = 1;
+			// Reducing to boolean.
+			s = (s < 384);
+			break;
+
+		// 16 bits are not well supported (weird decoded values).
+		case 16:
+			// Extracting two bytes.
+			v = lineoffset * y + (x << 1);
+			v = data[v] + data[v+1];
+			// Extracting the three sections.
+			s  = (v & 0x7c00) >> 12;
+			s += (v & 0x03e0) >> 5;
+			s += (v & 0x001f);
+			// Reducing to boolean.
+			s = (s < 23);
+			break;
+
+		// Handling monochrome bitmaps.
+		case 1: 
+			// Extracting the right byte.
+			v = lineoffset * y + (x >> 3);
+			// Isolating the sought bit.
+			s = data[v] & (128 >> (x & 7));
+			break;
 		}
 
 		if(s) address[((18-y) << 2) + (x >> 3)] |= (128 >> (x & 7));
 		else address[((18-y) << 2) + (x >> 3)] &= ~(128 >> (x & 7));
-
-//		char c = s ? '#' : ' ';
-//		fputc(c,stdout), fputc(c,stdout);
 	}
 
 	*address = 0;
-	return;
+	return warning;
 }

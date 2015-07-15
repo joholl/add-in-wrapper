@@ -22,6 +22,6 @@
 
 // Function prototypes.
 	void bitmap_read(const char *file, unsigned int width, unsigned int height, uint8_t *data);
-	void bitmap_pixels(const struct Bitmap *bmp, uint8_t *address);
+	int bitmap_pixels(const struct Bitmap *bmp, uint8_t *address);
 
 #endif // BMP_UTILS_H

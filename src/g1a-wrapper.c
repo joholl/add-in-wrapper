@@ -65,6 +65,10 @@ int main(int argc, char **argv)
 		"~bmp-width", "bitmap image '%s' has width %d, expected %d",
 		// The given bitmap image hasn't the right height.
 		"~bmp-height", "bitmap image '%s' has height %d, expected %d",
+		// The given bitmap is not made only of black and white pixels.
+		"~bmp-color", "bitmap image '%s' is not black and white",
+		// 16-bit bitmaps are not fully supported.
+		"bmp-16-bit", "16-bit bitmap '%s' is not fully supported",
 		// NULL terminator.
 		NULL
 	};
@@ -179,7 +183,7 @@ void args(int argc, char **argv, struct Options *options)
 		// Help command.
 		if(!strcmp(argv[i], "-h") || !strcmp(argv[i],"--help")) help();
 		// Info command.
-		if(!strcmp(argv[i], "-i") || !strcmp(argv[i],"--info")) info();
+		if(!strcmp(argv[i],"--info")) info();
 
 		// Output filename.
 		if(!strcmp(argv[i],"-o")) options->output = argv[++i];
