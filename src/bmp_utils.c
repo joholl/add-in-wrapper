@@ -192,18 +192,28 @@ void bitmap_read(const char *file, unsigned int width, unsigned int height,
 
 static int bitmap_pixels(const struct Bitmap *bmp, uint8_t *address)
 {
+	// Using the offset of raw pixel data in the bitmap data.
 	const unsigned int offset =
 		(bmp->data[0x0d] << 24) | (bmp->data[0x0c] << 16) |
 		(bmp->data[0x0b] << 8) | bmp->data[0x0a];
+	// Using a direct pointer to pixel data.
 	const uint8_t *data = bmp->data + offset;
 
-	int line_length = (bmp->depth == 1 ? 4 : 30 * bmp->depth >> 3);
+	// Using an integer to store the line length.
+	int line_length = (bmp->depth == 1 ? 4 : 30 * (bmp->depth >> 3));
+	// Using a warning indicator, related to the presence of pixels in the
+	// image, that are neither black nor white.
 	int warning = 0;
-	int x,y,s;
-	int v;
+	// Using two iterators, an offset and a dummy integer.
+	int x, y, v, s;
+	// Using a byte.
+	uint8_t byte;
 
+	// Adapting line length because it needs to be divisible by 4.
 	line_length += line_length & 3;
-	for(x=0; x<76; x++) address[x] = 0;
+
+	// Emptying the existing bitmap.
+	for(x=0; x < 76; x++) address[x] = 0;
 
 	for(y=18; y+1; y--) for(x=0; x<30; x++)
 	{
@@ -258,11 +268,18 @@ static int bitmap_pixels(const struct Bitmap *bmp, uint8_t *address)
 			break;
 		}
 
-		if(s) address[((18-y) << 2) + (x >> 3)] |= (128 >> (x & 7));
-		else address[((18-y) << 2) + (x >> 3)] &= ~(128 >> (x & 7));
+		// Getting the offset of the byte to edit.
+		v = ((18-y) << 2) + (x >> 3);
+		// Getting the byte at this offset.
+		byte = address[v];
+		// Altering the byte depending on the pixel value.
+		if(s) byte |= (128 >> (x & 7));
+		else byte &= ~(128 >> (x & 7));
+		// Writing the new byte.
+		address[v] = byte;
 	}
 
-	*address = 0;
+	// Returning the warning indicator.
 	return warning;
 }
 
