@@ -1,6 +1,6 @@
 
-                                  g1a-wrapper
-
+g1a-wrapper
+===========
 
 g1a-wrapper is a simple utility program that generates g1a files from pure
 compiled binary source code.
@@ -10,10 +10,11 @@ information such as application name and version, icon, etc.
 
 
 
-	Building and installing
+Building and installing
+-----------------------
 
 To build g1a-wrapper from sources, just enter a terminal, move to the directory
-containing the file 'Makefile' (and probably this one too), and use make :
+containing the file `Makefile` (and probably this one too), and use `make` :
 
 	$ make all
 
@@ -26,7 +27,8 @@ If so, you may then remove all this folder and the files it contains.
 
 
 
-	Usage
+Usage
+-----
 
 If you have installed g1a-wrapper, it has moved to /usr/bin, so you can invoke
 the program just by typing its name :
@@ -41,7 +43,8 @@ you will have to use its absolute path :
 
 
 
-	Bug report and improvements
+Bug report and improvements
+---------------------------
 
 Please report any bug or improvement idea to my git repository on bitbucket.org
 at https://bitbucket.org/Lephenixnoir/add-in-wrapper/issues.
