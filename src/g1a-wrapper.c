@@ -92,7 +92,7 @@ int main(int argc, char **argv)
 	};
 
 	// Using memory for a header.
-	char header[0x200];
+	unsigned char header[0x200];
 	// Using an options structure.
 	struct Options options;
 	// Using a failure indicator.
@@ -100,7 +100,7 @@ int main(int argc, char **argv)
 	// Using an iterator.
 	int i;
 
-	//Initializing error module.
+	// Initializing error module.
 	error_init("g1a-wrapper", 1, &failure);
 
 	// Initializing various fatal errors, errors, warnings and notes.
@@ -408,7 +408,7 @@ void args(int argc, char **argv, struct Options *options)
 	@arg	data	Address of g1a header structure.
 */
 
-void generate(struct Options options, char *data)
+void generate(struct Options options, unsigned char *data)
 {
 	// Using a predefined array for an unknown five-byte sequence.
 	unsigned char unknown[5] = { 0x00, 0x10, 0x00, 0x10, 0x00 };
@@ -427,13 +427,13 @@ void generate(struct Options options, char *data)
 	// Skipping a checksum.
 
 	// This byte role is quite unknown.
-	data[0x00F] = 0x01;
+	data[0x0f] = 0x01;
 	// Skipping a file size and a checksum.
 
 	// These nine first bytes also seem insignificant, the last two
 	// represent the number of objects in an MCS file (not interesting
 	// here).
-	memset(data + 15, 0, 11);
+	memset(data + 0x15, 0, 11);
 
 	// Here begins the add-in header.
 	// Writing the application internal name.
@@ -465,7 +465,8 @@ void generate(struct Options options, char *data)
 	@arg	data		Header data address (casted as char *).
 */
 
-void write(const char *input_file, const char *output_file, char *data)
+void write(const char *input_file, const char *output_file,
+	unsigned char *data)
 {
 	// Using input and output file pointers.
 	FILE *input, *output;
@@ -620,7 +621,7 @@ void dump(const char *filename)
 	*/
 
 	// A g1a must have binary code with its header !
-	if(filesize <= 0x200)
+	if(filesize < 0x200)
 	{
 		// Emitting an error if there's not binary code.
 		error_emit(ERROR, "g1a-valid", filename, "too short");

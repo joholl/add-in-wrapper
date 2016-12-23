@@ -80,9 +80,10 @@ int main(int argc, char **argv);
 // Generating options structure from command-line arguments.
 void args(int argc, char **argv, struct Options *options);
 // Generating header data from options.
-void generate(struct Options options, char *data);
+void generate(struct Options options, unsigned char *data);
 // Writing header data and binary content to file.
-void write(const char * inputfile, const char *outputfile, char *data);
+void write(const char * inputfile, const char *outputfile,
+	unsigned char *data);
 
 // Testing if a string matches a simple format.
 int string_format(const char *str, const char *format);
